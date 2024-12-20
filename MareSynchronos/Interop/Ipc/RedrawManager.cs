@@ -24,7 +24,7 @@ public class RedrawManager
         _dalamudUtil = dalamudUtil;
     }
 
-    public async Task PenumbraRedrawInternalAsync(IPluginLog Logger, GameObjectHandler handler, Guid applicationId, Action<ICharacter> action, CancellationToken token)
+    public async Task PenumbraRedrawInternalAsync( GameObjectHandler handler, Guid applicationId, Action<ICharacter> action, CancellationToken token)
     {
         _mareMediator.Publish(new PenumbraStartRedrawMessage(handler.Address));
 
@@ -39,7 +39,7 @@ public class RedrawManager
             await handler.ActOnFrameworkAfterEnsureNoDrawAsync(action, combinedToken).ConfigureAwait(false);
 
             if (!_disposalCts.Token.IsCancellationRequested)
-                await _dalamudUtil.WaitWhileCharacterIsDrawing(Logger, handler, applicationId, 30000, combinedToken).ConfigureAwait(false);
+                await _dalamudUtil.WaitWhileCharacterIsDrawing(handler, applicationId, 30000, combinedToken).ConfigureAwait(false);
         }
         finally
         {

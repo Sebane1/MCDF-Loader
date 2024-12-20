@@ -9,13 +9,12 @@ public unsafe class BlockedCharacterHandler
 {
     private sealed record CharaData(ulong AccId, ulong ContentId);
     private readonly Dictionary<CharaData, bool> _blockedCharacterCache = new();
+    private IPluginLog _Logger;
 
-    //private readonly IPluginLog<BlockedCharacterHandler> _Logger;
-
-    public BlockedCharacterHandler(Logger<BlockedCharacterHandler> Logger, IGameInteropProvider gameInteropProvider)
+    public BlockedCharacterHandler( IGameInteropProvider gameInteropProvider)
     {
         gameInteropProvider.InitializeFromAttributes(this);
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
     }
 
     private static CharaData GetIdsFromPlayerPointer(nint ptr)

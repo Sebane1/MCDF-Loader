@@ -1,4 +1,5 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Character;
+﻿using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using MareSynchronos.API.Data.Enum;
 using MareSynchronos.FileCache;
 using MareSynchronos.Interop.Ipc;
@@ -17,17 +18,17 @@ public class PlayerDataFactory
     private readonly DalamudUtilService _dalamudUtil;
     private readonly FileCacheManager _fileCacheManager;
     private readonly IpcManager _ipcManager;
-    private readonly IPluginLog<PlayerDataFactory> _logger;
+    private readonly IPluginLog _logger;
     private readonly PerformanceCollectorService _performanceCollector;
     private readonly XivDataAnalyzer _modelAnalyzer;
     private readonly McdfMediator _mareMediator;
     private readonly TransientResourceManager _transientResourceManager;
 
-    public PlayerDataFactory(IPluginLog<PlayerDataFactory> logger, DalamudUtilService dalamudUtil, IpcManager ipcManager,
+    public PlayerDataFactory( DalamudUtilService dalamudUtil, IpcManager ipcManager,
         TransientResourceManager transientResourceManager, FileCacheManager fileReplacementFactory,
         PerformanceCollectorService performanceCollector, XivDataAnalyzer modelAnalyzer, McdfMediator mareMediator)
     {
-        _logger = logger;
+        _logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
         _ipcManager = ipcManager;
         _transientResourceManager = transientResourceManager;
@@ -130,7 +131,7 @@ public class PlayerDataFactory
         previousData.CustomizePlusScale.Remove(objectKind);
 
         // wait until chara is not drawing and present so nothing spontaneously explodes
-        await _dalamudUtil.WaitWhileCharacterIsDrawing(_logger, playerRelatedObject, Guid.NewGuid(), 30000, ct: token).ConfigureAwait(false);
+        await _dalamudUtil.WaitWhileCharacterIsDrawing( playerRelatedObject, Guid.NewGuid(), 30000, ct: token).ConfigureAwait(false);
         int totalWaitTime = 10000;
         while (!await _dalamudUtil.IsObjectPresentAsync(await _dalamudUtil.CreateGameObjectAsync(playerRelatedObject.Address).ConfigureAwait(false)).ConfigureAwait(false) && totalWaitTime > 0)
         {
@@ -148,7 +149,7 @@ public class PlayerDataFactory
         // penumbra call, it's currently broken
         Dictionary<string, HashSet<string>>? resolvedPaths;
 
-        resolvedPaths = (await _ipcManager.Penumbra.GetCharacterData(_logger, playerRelatedObject).ConfigureAwait(false));
+        resolvedPaths = (await _ipcManager.Penumbra.GetCharacterData( playerRelatedObject).ConfigureAwait(false));
         if (resolvedPaths == null) throw new InvalidOperationException("Penumbra returned null data");
 
         previousData.FileReplacements[objectKind] =

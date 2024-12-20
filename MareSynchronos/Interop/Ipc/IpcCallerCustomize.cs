@@ -23,7 +23,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
     private DalamudUtilService _dalamudUtil;
     private McdfMediator _mareMediator;
 
-    public IpcCallerCustomize(IPluginLog Logger, IDalamudPluginInterface dalamudPluginInterface,
+    public IpcCallerCustomize( IDalamudPluginInterface dalamudPluginInterface,
         DalamudUtilService dalamudUtil, McdfMediator mareMediator)
     {
         _customizePlusApiVersion = dalamudPluginInterface.GetIpcSubscriber<(int, int)>("CustomizePlus.General.GetApiVersion");
@@ -35,7 +35,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
         _customizePlusDeleteByUniqueId = dalamudPluginInterface.GetIpcSubscriber<Guid, int>("CustomizePlus.Profile.DeleteTemporaryProfileByUniqueId");
 
         _customizePlusOnScaleUpdate.Subscribe(OnCustomizePlusScaleChange);
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 

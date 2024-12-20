@@ -1,4 +1,5 @@
-﻿using MareSynchronos.MareConfiguration;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.MareConfiguration;
 using MareSynchronos.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,14 +12,14 @@ namespace MareSynchronos.Services;
 public sealed class PerformanceCollectorService : IHostedService
 {
     private const string _counterSplit = "=>";
-    private readonly IPluginLog<PerformanceCollectorService> _logger;
+    private readonly IPluginLog _logger;
     private readonly MareConfigService _mareConfigService;
     public ConcurrentDictionary<string, RollingList<(TimeOnly, long)>> PerformanceCounters { get; } = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource _periodicLogPruneTaskCts = new();
 
-    public PerformanceCollectorService(IPluginLog<PerformanceCollectorService> logger, MareConfigService mareConfigService)
+    public PerformanceCollectorService( MareConfigService mareConfigService)
     {
-        _logger = logger;
+        _logger = EntryPoint.PluginLog;
         _mareConfigService = mareConfigService;
     }
 

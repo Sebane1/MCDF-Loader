@@ -17,10 +17,10 @@ public class NotificationService : DisposableMediatorSubscriberBase, IHostedServ
     private readonly IChatGui _chatGui;
     private readonly MareConfigService _configurationService;
 
-    public NotificationService(IPluginLog logger, McdfMediator mediator,
+    public NotificationService( McdfMediator mediator,
         DalamudUtilService dalamudUtilService,
         INotificationManager notificationManager,
-        IChatGui chatGui, MareConfigService configurationService) : base(logger, mediator)
+        IChatGui chatGui, MareConfigService configurationService) : base( mediator)
     {
         _dalamudUtilService = dalamudUtilService;
         _notificationManager = notificationManager;

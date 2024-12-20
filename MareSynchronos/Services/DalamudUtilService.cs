@@ -38,11 +38,11 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly List<string> _notUpdatedCharas = [];
     private bool _sentBetweenAreas = false;
 
-    public DalamudUtilService(IPluginLog Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
+    public DalamudUtilService( IClientState clientState, IObjectTable objectTable, IFramework framework,
         IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager, McdfMediator mediator, PerformanceCollectorService performanceCollector)
     {
         _performanceCollector = performanceCollector;
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _clientState = clientState;
         _objectTable = objectTable;
         _framework = framework;
@@ -300,11 +300,11 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         return Task.CompletedTask;
     }
 
-    public async Task WaitWhileCharacterIsDrawing(IPluginLog Logger, GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
+    public async Task WaitWhileCharacterIsDrawing( GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
     {
         if (!_clientState.IsLoggedIn) return;
 
-        Logger.Debug("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
+        _Logger.Debug("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
 
         const int tick = 250;
         int curWaitTime = 0;
@@ -314,20 +314,20 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                    && curWaitTime < timeOut
                    && await handler.IsBeingDrawnRunOnFrameworkAsync().ConfigureAwait(false)) // 0b100000000000 is "still rendering" or something
             {
-                Logger.Debug("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
+                _Logger.Debug("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
                 curWaitTime += tick;
                 await Task.Delay(tick).ConfigureAwait(true);
             }
 
-            Logger.Debug("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
+            _Logger.Debug("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
         }
         catch (NullReferenceException ex)
         {
-            Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            _Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
         catch (AccessViolationException ex)
         {
-            Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            _Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
     }
 

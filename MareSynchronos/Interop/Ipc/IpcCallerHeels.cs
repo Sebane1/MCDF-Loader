@@ -18,9 +18,9 @@ public sealed class IpcCallerHeels : IIpcCaller
     private readonly ICallGateSubscriber<int, string, object?> _heelsRegisterPlayer;
     private readonly ICallGateSubscriber<int, object?> _heelsUnregisterPlayer;
 
-    public IpcCallerHeels(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator)
+    public IpcCallerHeels( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _heelsGetApiVersion = pi.GetIpcSubscriber<(int, int)>("SimpleHeels.ApiVersion");

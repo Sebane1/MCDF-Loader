@@ -1,4 +1,5 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Character;
+﻿using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.Havok.Animation;
 using FFXIVClientStructs.Havok.Common.Base.Types;
@@ -14,15 +15,15 @@ namespace MareSynchronos.Services;
 
 public sealed class XivDataAnalyzer
 {
-    private readonly IPluginLog<XivDataAnalyzer> _logger;
+    private readonly IPluginLog _logger;
     private readonly FileCacheManager _fileCacheManager;
     private readonly XivDataStorageService _configService;
     private readonly List<string> _failedCalculatedTris = [];
 
-    public XivDataAnalyzer(IPluginLog<XivDataAnalyzer> logger, FileCacheManager fileCacheManager,
+    public XivDataAnalyzer(FileCacheManager fileCacheManager,
         XivDataStorageService configService)
     {
-        _logger = logger;
+        _logger = EntryPoint.PluginLog;
         _fileCacheManager = fileCacheManager;
         _configService = configService;
     }

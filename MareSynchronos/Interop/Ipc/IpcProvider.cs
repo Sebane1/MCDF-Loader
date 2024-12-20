@@ -24,7 +24,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public McdfMediator Mediator { get; init; }
 
-    public IpcProvider(IPluginLog Logger, IDalamudPluginInterface pi,
+    public IpcProvider( IDalamudPluginInterface pi,
         MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {

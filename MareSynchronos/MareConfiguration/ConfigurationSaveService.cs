@@ -1,4 +1,5 @@
-﻿using MareSynchronos.MareConfiguration.Configurations;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.MareConfiguration.Configurations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
@@ -9,19 +10,17 @@ namespace MareSynchronos.MareConfiguration;
 public class ConfigurationSaveService : IHostedService
 {
     private readonly HashSet<object> _configsToSave = [];
-    private readonly IPluginLog<ConfigurationSaveService> _logger;
     private readonly SemaphoreSlim _configSaveSemaphore = new(1, 1);
     private readonly CancellationTokenSource _configSaveCheckCts = new();
     public const string BackupFolder = "config_backup";
     private readonly MethodInfo _saveMethod;
 
-    public ConfigurationSaveService(IPluginLog<ConfigurationSaveService> logger, IEnumerable<IConfigService<IMareConfiguration>> configs)
+    public ConfigurationSaveService(IEnumerable<IConfigService<IMareConfiguration>> configs)
     {
         foreach (var config in configs)
         {
             config.ConfigSave += OnConfigurationSave;
         }
-        _logger = logger;
 #pragma warning disable S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
         _saveMethod = GetType().GetMethod(nameof(SaveConfig), BindingFlags.Instance | BindingFlags.NonPublic)!;
 #pragma warning restore S3011 // Reflection should not be used to increase accessibility of classes, methods, or fields
@@ -36,19 +35,6 @@ public class ConfigurationSaveService : IHostedService
 
     private async Task PeriodicSaveCheck(CancellationToken ct)
     {
-        while (!ct.IsCancellationRequested)
-        {
-            try
-            {
-                await SaveConfigs().ConfigureAwait(false);
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "Error during SaveConfigs");
-            }
-
-            await Task.Delay(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
-        }
     }
 
     private async Task SaveConfigs()
@@ -70,68 +56,14 @@ public class ConfigurationSaveService : IHostedService
 
     private async Task SaveConfig<T>(IConfigService<T> config) where T : IMareConfiguration
     {
-        _logger.Debug("Saving {configName}", config.ConfigurationName);
-        var configDir = config.ConfigurationPath.Replace(config.ConfigurationName, string.Empty);
-
-        try
-        {
-            var configBackupFolder = Path.Join(configDir, BackupFolder);
-            if (!Directory.Exists(configBackupFolder))
-                Directory.CreateDirectory(configBackupFolder);
-
-            var configNameSplit = config.ConfigurationName.Split(".");
-            var existingConfigs = Directory.EnumerateFiles(
-                configBackupFolder,
-                configNameSplit[0] + "*")
-                .Select(c => new FileInfo(c))
-                .OrderByDescending(c => c.LastWriteTime).ToList();
-            if (existingConfigs.Skip(10).Any())
-            {
-                foreach (var oldBak in existingConfigs.Skip(10).ToList())
-                {
-                    oldBak.Delete();
-                }
-            }
-
-            string backupPath = Path.Combine(configBackupFolder, configNameSplit[0] + "." + DateTime.Now.ToString("yyyyMMddHHmmss") + "." + configNameSplit[1]);
-            _logger.Debug("Backing up current config to {backupPath}", backupPath);
-            File.Copy(config.ConfigurationPath, backupPath, overwrite: true);
-            FileInfo fi = new(backupPath);
-            fi.LastWriteTimeUtc = DateTime.UtcNow;
-        }
-        catch (Exception ex)
-        {
-            // ignore if file cannot be backupped
-            _logger.Warning(ex, "Could not create backup for {config}", config.ConfigurationPath);
-        }
-
-        var temp = config.ConfigurationPath + ".tmp";
-        try
-        {
-            await File.WriteAllTextAsync(temp, JsonSerializer.Serialize(config.Current, typeof(T), new JsonSerializerOptions()
-            {
-                WriteIndented = true
-            })).ConfigureAwait(false);
-            File.Move(temp, config.ConfigurationPath, true);
-            config.UpdateLastWriteTime();
-        }
-        catch (Exception ex)
-        {
-            _logger.Warning(ex, "Error during config save of {config}", config.ConfigurationName);
-        }
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _ = Task.Run(() => PeriodicSaveCheck(_configSaveCheckCts.Token));
         return Task.CompletedTask;
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        await _configSaveCheckCts.CancelAsync().ConfigureAwait(false);
-        _configSaveCheckCts.Dispose();
-
-        await SaveConfigs().ConfigureAwait(false);
     }
 }

@@ -5,9 +5,9 @@ namespace MareSynchronos.Services.Mediator;
 
 public abstract class MediatorSubscriberBase : IMediatorSubscriber
 {
-    protected MediatorSubscriberBase(IPluginLog logger, McdfMediator mediator)
+    protected MediatorSubscriberBase(McdfMediator mediator)
     {
-        Logger = logger;
+        Logger = EntryPoint.PluginLog;
 
         Logger.Warning("Creating {type} ({this})", GetType().Name, this);
         Mediator = mediator;

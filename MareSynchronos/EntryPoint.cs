@@ -29,12 +29,15 @@ public sealed class EntryPoint
     private readonly IHost _host;
     private static IServiceCollection _collection;
 
+    public static IPluginLog PluginLog { get; set; }
+
     public EntryPoint(IDalamudPluginInterface pluginInterface, ICommandManager commandManager, IDataManager gameData,
         IFramework framework, IObjectTable objectTable, IClientState clientState, ICondition condition, IChatGui chatGui,
         IGameGui gameGui, IDtrBar dtrBar, IPluginLog pluginLog, ITargetManager targetManager, INotificationManager notificationManager,
         ITextureProvider textureProvider, IContextMenu contextMenu, IGameInteropProvider gameInteropProvider, string path)
     {
         CachePath.CacheLocation = path;
+        PluginLog = pluginLog;
         if (!Directory.Exists(pluginInterface.ConfigDirectory.FullName))
             Directory.CreateDirectory(pluginInterface.ConfigDirectory.FullName);
         var traceDir = Path.Join(pluginInterface.ConfigDirectory.FullName, "tracelog");
@@ -88,38 +91,38 @@ public sealed class EntryPoint
             collection.AddSingleton<GameObjectHandlerFactory>();
             collection.AddSingleton<XivDataAnalyzer>();
             collection.AddSingleton<FileCompactor>();
-            collection.AddSingleton((s) => new IpcProvider(pluginLog,
+            collection.AddSingleton((s) => new IpcProvider(
                 pluginInterface,
                 s.GetRequiredService<MareCharaFileManager>(), s.GetRequiredService<DalamudUtilService>(),
                 s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new DalamudUtilService(pluginLog,
+            collection.AddSingleton((s) => new DalamudUtilService(
                 clientState, objectTable, framework, gameGui, condition, gameData, targetManager, s.GetRequiredService<McdfMediator>(), s.GetRequiredService<PerformanceCollectorService>()));
-            collection.AddSingleton((s) => new IpcCallerPenumbra(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerPenumbra( pluginInterface,
     s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>(), s.GetRequiredService<RedrawManager>()));
-            collection.AddSingleton((s) => new IpcCallerGlamourer(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerGlamourer( pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>(), s.GetRequiredService<RedrawManager>()));
-            collection.AddSingleton((s) => new IpcCallerCustomize(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerCustomize( pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
             collection.AddSingleton<RedrawManager>();
-            collection.AddSingleton((s) => new IpcCallerPenumbra(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerPenumbra( pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>(), s.GetRequiredService<RedrawManager>()));
-            collection.AddSingleton((s) => new IpcCallerGlamourer(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerGlamourer( pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>(), s.GetRequiredService<RedrawManager>()));
-            collection.AddSingleton((s) => new IpcCallerCustomize(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerCustomize( pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new IpcCallerHeels(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerHeels(pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new IpcCallerHonorific(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerHonorific(pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new IpcCallerMoodles(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerMoodles(pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new IpcCallerPetNames(pluginLog, pluginInterface,
+            collection.AddSingleton((s) => new IpcCallerPetNames(pluginInterface,
                 s.GetRequiredService<DalamudUtilService>(), s.GetRequiredService<McdfMediator>()));
-            collection.AddSingleton((s) => new IpcManager(pluginLog,
+            collection.AddSingleton((s) => new IpcManager(
                 s.GetRequiredService<McdfMediator>(), s.GetRequiredService<IpcCallerPenumbra>(), s.GetRequiredService<IpcCallerGlamourer>(),
                 s.GetRequiredService<IpcCallerCustomize>(), s.GetRequiredService<IpcCallerHeels>(), s.GetRequiredService<IpcCallerHonorific>(),
                 s.GetRequiredService<IpcCallerMoodles>(), s.GetRequiredService<IpcCallerPetNames>()));
-            collection.AddSingleton((s) => new NotificationService(pluginLog,
+            collection.AddSingleton((s) => new NotificationService(
                 s.GetRequiredService<McdfMediator>(), s.GetRequiredService<DalamudUtilService>(),
                 notificationManager, chatGui, s.GetRequiredService<MareConfigService>()));
             collection.AddSingleton((s) => new MareConfigService(path));

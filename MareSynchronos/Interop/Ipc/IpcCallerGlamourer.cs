@@ -31,8 +31,8 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private bool _shownGlamourerUnavailable = false;
     private readonly uint LockCode = 0x6D617265;
 
-    public IpcCallerGlamourer(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
-        RedrawManager redrawManager) : base(Logger, mareMediator)
+    public IpcCallerGlamourer( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
+        RedrawManager redrawManager) : base( mareMediator)
     {
         _glamourerApiVersions = new ApiVersion(pi);
         _glamourerGetAllCustomization = new GetStateBase64(pi);
@@ -42,7 +42,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         _glamourerUnlock = new UnlockState(pi);
         _glamourerUnlockByName = new UnlockStateName(pi);
 
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _pi = pi;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
@@ -104,7 +104,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task ApplyAllAsync(IPluginLog Logger, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
+    public async Task ApplyAllAsync( GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
     {
         if (!APIAvailable || string.IsNullOrEmpty(customization) || _dalamudUtil.IsZoning) return;
 
@@ -113,7 +113,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         try
         {
 
-            await _redrawManager.PenumbraRedrawInternalAsync(Logger, handler, applicationId, (chara) =>
+            await _redrawManager.PenumbraRedrawInternalAsync(handler, applicationId, (chara) =>
             {
                 try
                 {
@@ -153,13 +153,13 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertAsync(IPluginLog Logger, string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
+    public async Task RevertAsync( string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
         try
         {
             await _redrawManager.RedrawSemaphore.WaitAsync(token).ConfigureAwait(false);
-            await _redrawManager.PenumbraRedrawInternalAsync(Logger, handler, applicationId, (chara) =>
+            await _redrawManager.PenumbraRedrawInternalAsync(handler, applicationId, (chara) =>
             {
                 try
                 {
@@ -183,18 +183,18 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertByNameAsync(IPluginLog Logger, string name, Guid applicationId)
+    public async Task RevertByNameAsync( string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 
         await _dalamudUtil.RunOnFrameworkThread(() =>
         {
-            RevertByName(Logger, name, applicationId);
+            RevertByName(name, applicationId);
 
         }).ConfigureAwait(false);
     }
 
-    public void RevertByName(IPluginLog Logger, string name, Guid applicationId)
+    public void RevertByName( string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 

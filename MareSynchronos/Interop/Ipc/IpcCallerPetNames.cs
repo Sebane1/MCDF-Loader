@@ -24,10 +24,10 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _setPlayerData;
     private readonly ICallGateSubscriber<ushort, object> _clearPlayerData;
 
-    public IpcCallerPetNames(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerPetNames( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 

@@ -22,10 +22,10 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
-    public IpcCallerHonorific(IPluginLog  Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerHonorific(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _honorificApiVersion = pi.GetIpcSubscriber<(uint, uint)>("Honorific.ApiVersion");

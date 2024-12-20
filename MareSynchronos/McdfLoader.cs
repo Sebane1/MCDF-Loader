@@ -19,9 +19,9 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
     private IServiceScope? _runtimeServiceScope;
     private Task? _launchTask = null;
 
-    public McdfLoader(IPluginLog Logger, MareConfigService mareConfigService,
+    public McdfLoader( MareConfigService mareConfigService,
         DalamudUtilService dalamudUtil,
-        IServiceScopeFactory serviceScopeFactory, McdfMediator mediator) : base(Logger, mediator)
+        IServiceScopeFactory serviceScopeFactory, McdfMediator mediator) : base(mediator)
     {
         _mareConfigService = mareConfigService;
         _dalamudUtil = dalamudUtil;

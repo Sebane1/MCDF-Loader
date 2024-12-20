@@ -1,4 +1,5 @@
-﻿using MareSynchronos.MareConfiguration;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.MareConfiguration;
 using MareSynchronos.Services;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
@@ -13,15 +14,15 @@ public sealed class FileCompactor
     private readonly Dictionary<string, int> _clusterSizes;
 
     private readonly WOF_FILE_COMPRESSION_INFO_V1 _efInfo;
-    private readonly IPluginLog<FileCompactor> _Logger;
+    private readonly IPluginLog _Logger;
 
     private readonly MareConfigService _mareConfigService;
     private readonly DalamudUtilService _dalamudUtilService;
 
-    public FileCompactor(IPluginLog<FileCompactor> Logger, MareConfigService mareConfigService, DalamudUtilService dalamudUtilService)
+    public FileCompactor( MareConfigService mareConfigService, DalamudUtilService dalamudUtilService)
     {
         _clusterSizes = new(StringComparer.Ordinal);
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _mareConfigService = mareConfigService;
         _dalamudUtilService = dalamudUtilService;
         _efInfo = new WOF_FILE_COMPRESSION_INFO_V1

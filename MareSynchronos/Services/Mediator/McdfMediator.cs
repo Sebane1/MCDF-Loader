@@ -1,4 +1,5 @@
-﻿using MareSynchronos.MareConfiguration;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.MareConfiguration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
@@ -11,16 +12,16 @@ public sealed class McdfMediator : IHostedService
 {
     private readonly object _addRemoveLock = new();
     private readonly ConcurrentDictionary<object, DateTime> _lastErrorTime = [];
-    private readonly IPluginLog<McdfMediator> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly CancellationTokenSource _loopCts = new();
     private readonly ConcurrentQueue<MessageBase> _messageQueue = new();
     private readonly MareConfigService _mareConfigService;
     private readonly ConcurrentDictionary<Type, HashSet<SubscriberAction>> _subscriberDict = [];
     private bool _processQueue = false;
     private readonly ConcurrentDictionary<Type, MethodInfo?> _genericExecuteMethods = new();
-    public McdfMediator(IPluginLog<McdfMediator> Logger, MareConfigService mareConfigService)
+    public McdfMediator( MareConfigService mareConfigService)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _mareConfigService = mareConfigService;
     }
 

@@ -1,4 +1,5 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.Character;
+﻿using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
@@ -23,8 +24,8 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     private byte _classJob = 0;
     private CancellationTokenSource _zoningCts = new();
 
-    public GameObjectHandler(IPluginLog<GameObjectHandler> Logger, PerformanceCollectorService performanceCollectorService,
-        McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base(Logger, mediator)
+    public GameObjectHandler( PerformanceCollectorService performanceCollectorService,
+        McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base( mediator)
     {
         ObjectKind = objectKind;
         _dalamudUtil = dalamudUtil;

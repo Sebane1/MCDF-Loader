@@ -1,4 +1,5 @@
-﻿using MareSynchronos.Interop.Ipc;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.Interop.Ipc;
 using MareSynchronos.MareConfiguration;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
@@ -23,9 +24,9 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     private readonly CancellationTokenSource _periodicCalculationTokenSource = new();
     public static readonly IImmutableList<string> AllowedFileExtensions = [".mdl", ".tex", ".mtrl", ".tmb", ".pap", ".avfx", ".atex", ".sklb", ".eid", ".phyb", ".pbd", ".scd", ".skp", ".shpk"];
 
-    public CacheMonitor(IPluginLog<CacheMonitor> Logger, IpcManager ipcManager, MareConfigService configService,
+    public CacheMonitor( IpcManager ipcManager, MareConfigService configService,
         FileCacheManager fileDbManager, McdfMediator mediator,DalamudUtilService dalamudUtil,
-        FileCompactor fileCompactor, PerformanceCollectorService performanceCollector) : base(Logger, mediator)
+        FileCompactor fileCompactor, PerformanceCollectorService performanceCollector) : base( mediator)
     {
         _performanceCollector = performanceCollector;
         _ipcManager = ipcManager;

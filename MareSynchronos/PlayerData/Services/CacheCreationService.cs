@@ -1,4 +1,5 @@
-﻿using MareSynchronos.API.Data.Enum;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.API.Data.Enum;
 using MareSynchronos.PlayerData.Data;
 using MareSynchronos.PlayerData.Factories;
 using MareSynchronos.PlayerData.Handlers;
@@ -25,8 +26,8 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
     private bool _isZoning = false;
     private readonly Dictionary<ObjectKind, CancellationTokenSource> _glamourerCts = new();
 
-    public CacheCreationService(IPluginLog<CacheCreationService> logger, McdfMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
-        PlayerDataFactory characterDataFactory, DalamudUtilService dalamudUtil) : base(logger, mediator)
+    public CacheCreationService( McdfMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
+        PlayerDataFactory characterDataFactory, DalamudUtilService dalamudUtil) : base( mediator)
     {
         _characterDataFactory = characterDataFactory;
 
@@ -240,7 +241,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogCritical(ex, "Error during Cache Creation Processing");
+                    Logger.Error(ex, "Error during Cache Creation Processing");
                 }
                 finally
                 {

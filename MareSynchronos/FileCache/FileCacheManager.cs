@@ -27,9 +27,9 @@ public sealed class FileCacheManager : IHostedService
     private readonly IpcManager _ipcManager;
     private readonly IPluginLog _Logger;
 
-    public FileCacheManager(IPluginLog Logger, IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
+    public FileCacheManager( IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _ipcManager = ipcManager;
         _configService = configService;
         _mareMediator = mareMediator;

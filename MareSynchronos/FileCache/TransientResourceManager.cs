@@ -1,4 +1,5 @@
-﻿using MareSynchronos.API.Data.Enum;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.API.Data.Enum;
 using MareSynchronos.MareConfiguration;
 using MareSynchronos.MareConfiguration.Configurations;
 using MareSynchronos.PlayerData.Data;
@@ -22,8 +23,8 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
     private ConcurrentDictionary<ObjectKind, HashSet<string>>? _semiTransientResources = null;
     private uint _lastClassJobId = uint.MaxValue;
 
-    public TransientResourceManager(IPluginLog<TransientResourceManager> Logger, TransientConfigService configurationService,
-            DalamudUtilService dalamudUtil, McdfMediator mediator) : base(Logger, mediator)
+    public TransientResourceManager(TransientConfigService configurationService,
+            DalamudUtilService dalamudUtil, McdfMediator mediator) : base( mediator)
     {
         _configurationService = configurationService;
         _dalamudUtil = dalamudUtil;

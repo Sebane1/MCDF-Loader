@@ -19,10 +19,10 @@ public sealed class IpcCallerMoodles : IIpcCaller
     private readonly DalamudUtilService _dalamudUtil;
     private readonly McdfMediator _mareMediator;
 
-    public IpcCallerMoodles(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerMoodles( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        _Logger = Logger;
+        _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
