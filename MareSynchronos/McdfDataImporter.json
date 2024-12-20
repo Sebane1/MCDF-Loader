@@ -1,0 +1,12 @@
+﻿{
+  "Author": "DarkArchon",
+  "Name": "MCDF Loader",
+  "Punchline": "Loads character appearances",
+  "Description": "",
+  "AssemblyVersion": "0.0.0.1",
+  "publicName": "MCDF",
+  "ApplicableVersion": "any",
+  "IconUrl": "https://raw.githubusercontent.com/Etheirys/Brio/main/Resources/Images/BrioIcon.png",
+  "Tags": [
+  ]
+}
