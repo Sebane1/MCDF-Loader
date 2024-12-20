@@ -245,20 +245,20 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public async Task RunOnFrameworkThread(Action act, [CallerMemberName] string callerMember = "", [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         var fileName = Path.GetFileNameWithoutExtension(callerFilePath);
-        //await _performanceCollector.LogPerformance(this, $"RunOnFramework:Act/{fileName}>{callerMember}:{callerLineNumber}", async () =>
-        //{
-        //    if (!_framework.IsInFrameworkUpdateThread)
-        //    {
-        //        await _framework.RunOnFrameworkThread(act).ContinueWith((_) => Task.CompletedTask).ConfigureAwait(false);
-        //        while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
-        //        {
-        //            _Logger.Debug("Still on framework");
-        //            await Task.Delay(1).ConfigureAwait(false);
-        //        }
-        //    }
-        //    else
-        //        act();
-        //}).ConfigureAwait(false);
+        await _performanceCollector.LogPerformance(this, $"RunOnFramework:Act/{fileName}>{callerMember}:{callerLineNumber}", async () =>
+        {
+            if (!_framework.IsInFrameworkUpdateThread)
+            {
+                await _framework.RunOnFrameworkThread(act).ContinueWith((_) => Task.CompletedTask).ConfigureAwait(false);
+                while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
+                {
+                    _Logger.Debug("Still on framework");
+                    await Task.Delay(1).ConfigureAwait(false);
+                }
+            }
+            else
+                act();
+        }).ConfigureAwait(false);
     }
 
     public async Task<T> RunOnFrameworkThread<T>(Func<T> func, [CallerMemberName] string callerMember = "", [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
