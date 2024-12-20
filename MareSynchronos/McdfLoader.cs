@@ -82,15 +82,6 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
             _runtimeServiceScope.ServiceProvider.GetRequiredService<CacheCreationService>();
             _runtimeServiceScope.ServiceProvider.GetRequiredService<TransientResourceManager>();
             _runtimeServiceScope.ServiceProvider.GetRequiredService<NotificationService>();
-
-#if !DEBUG
-            if (_mareConfigService.Current.LogLevel != LogLevel.Information)
-            {
-                Mediator.Publish(new NotificationMessage("Abnormal Log Level",
-                    $"Your log level is set to '{_mareConfigService.Current.LogLevel}' which is not recommended for normal usage. Set it to '{LogLevel.Information}' in \"Mare Settings -> Debug\" unless instructed otherwise.",
-                    MareConfiguration.Models.NotificationType.Error, TimeSpan.FromSeconds(15000)));
-            }
-#endif
         }
         catch (Exception ex)
         {
