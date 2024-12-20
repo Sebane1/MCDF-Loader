@@ -42,23 +42,34 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             if (msg.OwnedObject) return;
             _activeGameObjectHandlers.Remove(msg.GameObjectHandler);
         });
+        Task.Run(() => StartAsync(CancellationToken.None));
     }
-
+    public async void Dispose()
+    {
+        await StopAsync(CancellationToken.None);
+    }
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, bool>("McdfStandalone.LoadMcdf");
+        _loadFileProvider.RegisterFunc(LoadMcdf);
+        _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfStandalone.LoadMcdfAsync");
+        _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
+        _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
+        _handledGameAddresses.RegisterFunc(GetHandledAddresses);
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
+        _loadFileProvider?.UnregisterFunc();
+        _loadFileAsyncProvider?.UnregisterFunc();
+        _handledGameAddresses?.UnregisterFunc();
+        Mediator.UnsubscribeAll(this);
         return Task.CompletedTask;
     }
 
     private async Task<bool> LoadMcdfAsync(string path, IGameObject target)
     {
-        if (_mareCharaFileManager.CurrentlyWorking || !_dalamudUtil.IsInGpose)
-            return false;
-
         await ApplyFileAsync(path, target).ConfigureAwait(false);
 
         return true;
@@ -66,9 +77,6 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     private bool LoadMcdf(string path, IGameObject target)
     {
-        if (_mareCharaFileManager.CurrentlyWorking || !_dalamudUtil.IsInGpose)
-            return false;
-
         _ = Task.Run(async () => await ApplyFileAsync(path, target).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;

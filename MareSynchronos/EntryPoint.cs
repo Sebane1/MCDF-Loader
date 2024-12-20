@@ -16,6 +16,7 @@ using MareSynchronos.PlayerData.Services;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Events;
 using MareSynchronos.Services.Mediator;
+using McdfDataImporter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -26,12 +27,14 @@ namespace MareSynchronos;
 public sealed class EntryPoint
 {
     private readonly IHost _host;
+    private static IServiceCollection _collection;
 
     public EntryPoint(IDalamudPluginInterface pluginInterface, ICommandManager commandManager, IDataManager gameData,
         IFramework framework, IObjectTable objectTable, IClientState clientState, ICondition condition, IChatGui chatGui,
         IGameGui gameGui, IDtrBar dtrBar, IPluginLog pluginLog, ITargetManager targetManager, INotificationManager notificationManager,
-        ITextureProvider textureProvider, IContextMenu contextMenu, IGameInteropProvider gameInteropProvider)
+        ITextureProvider textureProvider, IContextMenu contextMenu, IGameInteropProvider gameInteropProvider, string path)
     {
+        CachePath.CacheLocation = path;
         if (!Directory.Exists(pluginInterface.ConfigDirectory.FullName))
             Directory.CreateDirectory(pluginInterface.ConfigDirectory.FullName);
         var traceDir = Path.Join(pluginInterface.ConfigDirectory.FullName, "tracelog");
@@ -75,10 +78,7 @@ public sealed class EntryPoint
         })
         .ConfigureServices(collection =>
         {
-            collection.AddSingleton(new WindowSystem("MareSynchronos"));
             collection.AddSingleton<FileDialogManager>();
-            collection.AddSingleton(new Dalamud.Localization("MareSynchronos.Localization.", "", useEmbedded: true));
-
             // add mare related singletons
             collection.AddSingleton<McdfMediator>();
             collection.AddSingleton<FileCacheManager>();
@@ -93,8 +93,7 @@ public sealed class EntryPoint
                 s.GetRequiredService<MareCharaFileManager>(), s.GetRequiredService<DalamudUtilService>(),
                 s.GetRequiredService<McdfMediator>()));
             collection.AddSingleton((s) => new DalamudUtilService(s.GetRequiredService<ILogger<DalamudUtilService>>(),
-                clientState, objectTable, framework, gameGui, condition, gameData, targetManager,
-                s.GetRequiredService<BlockedCharacterHandler>(), s.GetRequiredService<McdfMediator>(), s.GetRequiredService<PerformanceCollectorService>()));
+                clientState, objectTable, framework, gameGui, condition, gameData, targetManager, s.GetRequiredService<McdfMediator>(), s.GetRequiredService<PerformanceCollectorService>()));
 
             collection.AddSingleton<RedrawManager>();
             collection.AddSingleton((s) => new IpcCallerPenumbra(s.GetRequiredService<ILogger<IpcCallerPenumbra>>(), pluginInterface,
@@ -118,7 +117,7 @@ public sealed class EntryPoint
             collection.AddSingleton((s) => new NotificationService(s.GetRequiredService<ILogger<NotificationService>>(),
                 s.GetRequiredService<McdfMediator>(), s.GetRequiredService<DalamudUtilService>(),
                 notificationManager, chatGui, s.GetRequiredService<MareConfigService>()));
-            collection.AddSingleton((s) => new MareConfigService(pluginInterface.ConfigDirectory.FullName));
+            collection.AddSingleton((s) => new MareConfigService(path));
             collection.AddSingleton((s) => new TransientConfigService(pluginInterface.ConfigDirectory.FullName));
             collection.AddSingleton((s) => new XivDataStorageService(pluginInterface.ConfigDirectory.FullName));
             collection.AddSingleton<IConfigService<IMareConfiguration>>(s => s.GetRequiredService<MareConfigService>());
@@ -141,6 +140,7 @@ public sealed class EntryPoint
             collection.AddHostedService(p => p.GetRequiredService<PerformanceCollectorService>());
             collection.AddHostedService(p => p.GetRequiredService<IpcProvider>());
             collection.AddHostedService(p => p.GetRequiredService<McdfLoader>());
+            _collection = collection;
         })
         .Build();
 

@@ -25,7 +25,6 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly IClientState _clientState;
     private readonly ICondition _condition;
     private readonly IDataManager _gameData;
-    private readonly BlockedCharacterHandler _blockedCharacterHandler;
     private readonly IFramework _framework;
     private readonly IGameGui _gameGui;
     private readonly ILogger<DalamudUtilService> _Logger;
@@ -40,8 +39,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private bool _sentBetweenAreas = false;
 
     public DalamudUtilService(ILogger<DalamudUtilService> Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
-        IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager,
-        BlockedCharacterHandler blockedCharacterHandler, McdfMediator mediator, PerformanceCollectorService performanceCollector)
+        IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager, McdfMediator mediator, PerformanceCollectorService performanceCollector)
     {
         _performanceCollector = performanceCollector;
         //_//Logger = //Logger;
@@ -51,7 +49,6 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         _gameGui = gameGui;
         _condition = condition;
         _gameData = gameData;
-        _blockedCharacterHandler = blockedCharacterHandler;
         Mediator = mediator;
         WorldData = new(() =>
         {
@@ -441,12 +438,6 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                 var chara = _objectTable[i];
                 if (chara == null || chara.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
                     continue;
-
-                if (_blockedCharacterHandler.IsCharacterBlocked(chara.Address, out bool firstTime) && firstTime)
-                {
-                    //_//Logger.LogTrace("Skipping character {addr}, blocked/muted", chara.Address.ToString("X"));
-                    continue;
-                }
 
                 var charaName = ((GameObject*)chara.Address)->NameString;
                 var hash = GetHashedAccIdFromPlayerPointer(chara.Address);

@@ -9,6 +9,7 @@ using MareSynchronos.PlayerData.Handlers;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
 using MareSynchronos.Utils;
+using McdfDataImporter;
 using Microsoft.Extensions.Logging;
 using System.Text;
 using CharacterData = MareSynchronos.API.Data.CharacterData;
@@ -34,7 +35,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         McdfMediator mediator) : base(Logger, mediator)
     {
         _factory = new(manager);
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _gameObjectHandlerFactory = gameObjectHandlerFactory;
         _manager = manager;
         _ipcManager = ipcManager;
@@ -88,7 +89,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 using var lz4Stream = new LZ4Stream(unwrapped, LZ4StreamMode.Decompress, LZ4StreamFlags.HighCompression);
                 using var reader = new BinaryReader(lz4Stream);
                 MareCharaFileHeader.AdvanceReaderToData(reader);
-                //_//Logger.LogDebug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
+                _Logger.LogDebug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
                 extractedFiles = ExtractFilesFromCharaFile(LoadedCharaFile, reader, expectedLength);
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
                 foreach (var fileSwap in LoadedCharaFile.CharaFileData.FileSwaps)
@@ -113,7 +114,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 await _ipcManager.Glamourer.ApplyAllAsync(_Logger, tempHandler, LoadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
                 await _ipcManager.Penumbra.RedrawAsync(_Logger, tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                 _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
-                await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(_Logger, applicationId, coll).ConfigureAwait(false);
+                //await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(_Logger, applicationId, coll).ConfigureAwait(false);
                 if (!string.IsNullOrEmpty(LoadedCharaFile.CharaFileData.CustomizePlusData))
                 {
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, LoadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
@@ -128,7 +129,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            //_//Logger.LogWarning(ex, "Failure to read MCDF");
+            _Logger.LogWarning(ex, "Failure to read MCDF");
             throw;
         }
         finally
@@ -136,10 +137,10 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             CurrentlyWorking = false;
 
             //_//Logger.LogDebug("Clearing local files");
-            foreach (var file in Directory.EnumerateFiles(_configService.Current.CacheFolder, "*.tmp"))
-            {
-                File.Delete(file);
-            }
+            //foreach (var file in Directory.EnumerateFiles(CachePath.CacheLocation, "*.tmp"))
+            //{
+            //    File.Delete(file);
+            //}
         }
     }
 
@@ -210,8 +211,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             foreach (var item in output.CharaFileData.Files)
             {
                 var file = _manager.GetFileCacheByHash(item.Hash)!;
-                //_//Logger.LogDebug("Saving to MCDF: {hash}:{file}", item.Hash, file.ResolvedFilepath);
-                //_//Logger.LogDebug("\tAssociated GamePaths:");
+                _Logger.LogDebug("Saving to MCDF: {hash}:{file}", item.Hash, file.ResolvedFilepath);
+                _Logger.LogDebug("\tAssociated GamePaths:");
                 foreach (var path in item.GamePaths)
                 {
                     //_//Logger.LogDebug("\t{path}", path);
@@ -230,7 +231,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            //_//Logger.LogError(ex, "Failure Saving Mare Chara File, deleting output");
+            _Logger.LogError(ex, "Failure Saving Mare Chara File, deleting output");
             File.Delete(tempFilePath);
         }
         finally { CurrentlyWorking = false; }
@@ -242,12 +243,12 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         Dictionary<string, string> gamePathToFilePath = new(StringComparer.Ordinal);
         foreach (var fileData in charaFileHeader.CharaFileData.Files)
         {
-            var fileName = Path.Combine(_configService.Current.CacheFolder, "mare_" + _globalFileCounter++ + ".tmp");
+            var fileName = Path.Combine(CachePath.CacheLocation, "mare_" + _globalFileCounter++ + ".tmp");
             var length = fileData.Length;
             var bufferSize = length;
             using var fs = File.OpenWrite(fileName);
             using var wr = new BinaryWriter(fs);
-            //_//Logger.LogTrace("Reading {length} of {fileName}", length.ToByteString(), fileName);
+            _Logger.LogTrace("Reading {length} of {fileName}", length.ToByteString(), fileName);
             var buffer = reader.ReadBytes(bufferSize);
             wr.Write(buffer);
             wr.Flush();
@@ -256,10 +257,10 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             foreach (var path in fileData.GamePaths)
             {
                 gamePathToFilePath[path] = fileName;
-                //_//Logger.LogTrace("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
+                _Logger.LogTrace("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
             }
             totalRead += length;
-            //_//Logger.LogTrace("Read {read}/{expected} bytes", totalRead.ToByteString(), expectedLength.ToByteString());
+            _Logger.LogTrace("Read {read}/{expected} bytes", totalRead.ToByteString(), expectedLength.ToByteString());
         }
 
         return gamePathToFilePath;

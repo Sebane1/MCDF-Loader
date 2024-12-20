@@ -3,6 +3,7 @@ using MareSynchronos.MareConfiguration;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
 using MareSynchronos.Utils;
+using McdfDataImporter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -125,7 +126,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             return;
         }
 
-        DriveInfo di = new(new DirectoryInfo(_configService.Current.CacheFolder).Root.FullName);
+        DriveInfo di = new(new DirectoryInfo(CachePath.CacheLocation).Root.FullName);
         StorageisNTFS = string.Equals("NTFS", di.DriveFormat, StringComparison.OrdinalIgnoreCase);
         ////Logger.LogInformation("Mare Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
 
@@ -392,24 +393,24 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
     public void RecalculateFileCacheSize(CancellationToken token)
     {
-        if (string.IsNullOrEmpty(_configService.Current.CacheFolder) || !Directory.Exists(_configService.Current.CacheFolder))
+        if (string.IsNullOrEmpty(CachePath.CacheLocation) || !Directory.Exists(CachePath.CacheLocation))
         {
             FileCacheSize = 0;
             return;
         }
 
         FileCacheSize = -1;
-        DriveInfo di = new(new DirectoryInfo(_configService.Current.CacheFolder).Root.FullName);
+        DriveInfo di = new(new DirectoryInfo(CachePath.CacheLocation).Root.FullName);
         try
         {
             FileCacheDriveFree = di.AvailableFreeSpace;
         }
         catch (Exception ex)
         {
-            ////Logger.LogWarning(ex, "Could not determine drive size for Storage Folder {folder}", _configService.Current.CacheFolder);
+            ////Logger.LogWarning(ex, "Could not determine drive size for Storage Folder {folder}", CachePath.CacheLocation);
         }
 
-        var files = Directory.EnumerateFiles(_configService.Current.CacheFolder).Select(f => new FileInfo(f))
+        var files = Directory.EnumerateFiles(CachePath.CacheLocation).Select(f => new FileInfo(f))
             .OrderBy(f => f.LastAccessTime).ToList();
         FileCacheSize = files
             .Sum(f =>
@@ -475,7 +476,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             penDirExists = false;
             ////Logger.LogWarning("Penumbra directory is not set or does not exist.");
         }
-        if (string.IsNullOrEmpty(_configService.Current.CacheFolder) || !Directory.Exists(_configService.Current.CacheFolder))
+        if (string.IsNullOrEmpty(CachePath.CacheLocation) || !Directory.Exists(CachePath.CacheLocation))
         {
             cacheDirExists = false;
             ////Logger.LogWarning("Mare Cache directory is not set or does not exist.");
@@ -487,7 +488,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
         var previousThreadPriority = Thread.CurrentThread.Priority;
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
-        ////Logger.LogDebug("Getting files from {penumbra} and {storage}", penumbraDir, _configService.Current.CacheFolder);
+        ////Logger.LogDebug("Getting files from {penumbra} and {storage}", penumbraDir, CachePath.CacheLocation);
 
         Dictionary<string, string[]> penumbraFiles = new(StringComparer.Ordinal);
         foreach (var folder in Directory.EnumerateDirectories(penumbraDir!))
@@ -512,7 +513,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             if (ct.IsCancellationRequested) return;
         }
 
-        var allCacheFiles = Directory.GetFiles(_configService.Current.CacheFolder, "*.*", SearchOption.TopDirectoryOnly)
+        var allCacheFiles = Directory.GetFiles(CachePath.CacheLocation, "*.*", SearchOption.TopDirectoryOnly)
                                 .AsParallel()
                                 .Where(f =>
                                 {
@@ -681,7 +682,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         {
             _configService.Current.InitialScanComplete = true;
             _configService.Save();
-            StartMareWatcher(_configService.Current.CacheFolder);
+            StartMareWatcher(CachePath.CacheLocation);
             StartPenumbraWatcher(penumbraDir);
         }
     }
