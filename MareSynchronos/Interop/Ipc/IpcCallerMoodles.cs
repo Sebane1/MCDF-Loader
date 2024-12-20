@@ -14,14 +14,14 @@ public sealed class IpcCallerMoodles : IIpcCaller
     private readonly ICallGateSubscriber<nint, string> _moodlesGetStatus;
     private readonly ICallGateSubscriber<nint, string, object> _moodlesSetStatus;
     private readonly ICallGateSubscriber<nint, object> _moodlesRevertStatus;
-    private readonly ILogger<IpcCallerMoodles> _logger;
+    private readonly ILogger<IpcCallerMoodles> _Logger;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly MareMediator _mareMediator;
 
-    public IpcCallerMoodles(ILogger<IpcCallerMoodles> logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerMoodles(ILogger<IpcCallerMoodles> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         MareMediator mareMediator)
     {
-        _logger = logger;
+        //_//Logger = //Logger;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
@@ -71,7 +71,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not Get Moodles Status");
+            //_//Logger.LogWarning(e, "Could not Get Moodles Status");
             return null;
         }
     }
@@ -85,7 +85,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not Set Moodles Status");
+            //_//Logger.LogWarning(e, "Could not Set Moodles Status");
         }
     }
 
@@ -98,7 +98,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not Set Moodles Status");
+            //_//Logger.LogWarning(e, "Could not Set Moodles Status");
         }
     }
 }

@@ -99,8 +99,6 @@
     <None Update="images\icon.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <EmbeddedResource Include="Localization\de.json" />
-    <EmbeddedResource Include="Localization\fr.json" />
   </ItemGroup>
 
   <ItemGroup>

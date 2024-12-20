@@ -5,9 +5,9 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed partial class IpcManager : DisposableMediatorSubscriberBase
 {
-    public IpcManager(ILogger<IpcManager> logger, MareMediator mediator,
+    public IpcManager(ILogger<IpcManager> Logger, MareMediator mediator,
         IpcCallerPenumbra penumbraIpc, IpcCallerGlamourer glamourerIpc, IpcCallerCustomize customizeIpc, IpcCallerHeels heelsIpc,
-        IpcCallerHonorific honorificIpc, IpcCallerMoodles moodlesIpc, IpcCallerPetNames ipcCallerPetNames) : base(logger, mediator)
+        IpcCallerHonorific honorificIpc, IpcCallerMoodles moodlesIpc, IpcCallerPetNames ipcCallerPetNames) : base(Logger, mediator)
     {
         CustomizePlus = customizeIpc;
         Heels = heelsIpc;
@@ -30,7 +30,7 @@ public sealed partial class IpcManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Failed to check for some IPC, plugin not installed?");
+            //Logger.LogWarning(ex, "Failed to check for some IPC, plugin not installed?");
         }
     }
 

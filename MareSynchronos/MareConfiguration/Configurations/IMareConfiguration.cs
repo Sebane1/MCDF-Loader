@@ -2,5 +2,4 @@
 
 public interface IMareConfiguration
 {
-    int Version { get; set; }
 }

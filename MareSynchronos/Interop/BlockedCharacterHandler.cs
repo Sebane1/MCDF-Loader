@@ -10,12 +10,12 @@ public unsafe class BlockedCharacterHandler
     private sealed record CharaData(ulong AccId, ulong ContentId);
     private readonly Dictionary<CharaData, bool> _blockedCharacterCache = new();
 
-    private readonly ILogger<BlockedCharacterHandler> _logger;
+    //private readonly ILogger<BlockedCharacterHandler> _Logger;
 
-    public BlockedCharacterHandler(ILogger<BlockedCharacterHandler> logger, IGameInteropProvider gameInteropProvider)
+    public BlockedCharacterHandler(Logger<BlockedCharacterHandler> Logger, IGameInteropProvider gameInteropProvider)
     {
         gameInteropProvider.InitializeFromAttributes(this);
-        _logger = logger;
+        //_//Logger = //Logger;
     }
 
     private static CharaData GetIdsFromPlayerPointer(nint ptr)
@@ -34,7 +34,7 @@ public unsafe class BlockedCharacterHandler
 
         firstTime = true;
         var blockStatus = InfoProxyBlacklist.Instance()->GetBlockResultType(combined.AccId, combined.ContentId);
-        _logger.LogTrace("CharaPtr {ptr} is BlockStatus: {status}", ptr, blockStatus);
+        //_//Logger.LogTrace("CharaPtr {ptr} is BlockStatus: {status}", ptr, blockStatus);
         if ((int)blockStatus == 0) 
             return false;
         return _blockedCharacterCache[combined] = blockStatus != InfoProxyBlacklist.BlockResultType.NotBlocked;

@@ -22,8 +22,8 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
     private ConcurrentDictionary<ObjectKind, HashSet<string>>? _semiTransientResources = null;
     private uint _lastClassJobId = uint.MaxValue;
 
-    public TransientResourceManager(ILogger<TransientResourceManager> logger, TransientConfigService configurationService,
-            DalamudUtilService dalamudUtil, MareMediator mediator) : base(logger, mediator)
+    public TransientResourceManager(ILogger<TransientResourceManager> Logger, TransientConfigService configurationService,
+            DalamudUtilService dalamudUtil, MareMediator mediator) : base(Logger, mediator)
     {
         _configurationService = configurationService;
         _dalamudUtil = dalamudUtil;
@@ -112,7 +112,7 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
         }
 
         var transientResources = resources.ToList();
-        Logger.LogDebug("Persisting {count} transient resources", transientResources.Count);
+        //Logger.LogDebug("Persisting {count} transient resources", transientResources.Count);
         List<string> newlyAddedGamePaths = resources.Except(semiTransientResources, StringComparer.Ordinal).ToList();
         foreach (var gamePath in transientResources)
         {
@@ -197,7 +197,7 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
         {
             if (!_cachedFrameAddresses.Any(k => k.Value == (ObjectKind)kind) && TransientResources.Remove((ObjectKind)kind, out _))
             {
-                Logger.LogDebug("Object not present anymore: {kind}", kind.ToString());
+                //Logger.LogDebug("Object not present anymore: {kind}", kind.ToString());
             }
         }
     }
@@ -206,7 +206,7 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
     {
         _ = Task.Run(() =>
         {
-            Logger.LogDebug("Penumbra Mod Settings changed, verifying SemiTransientResources");
+            //Logger.LogDebug("Penumbra Mod Settings changed, verifying SemiTransientResources");
             foreach (var item in _playerRelatedPointers)
             {
                 Mediator.Publish(new TransientResourceChangedMessage(item.Address));
@@ -271,12 +271,12 @@ public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
         if (value.Contains(replacedGamePath)
             || SemiTransientResources.SelectMany(k => k.Value).Any(f => string.Equals(f, gamePath, StringComparison.OrdinalIgnoreCase)))
         {
-            Logger.LogTrace("Not adding {replacedPath} : {filePath}", replacedGamePath, filePath);
+            //Logger.LogTrace("Not adding {replacedPath} : {filePath}", replacedGamePath, filePath);
         }
         else
         {
             value.Add(replacedGamePath);
-            Logger.LogDebug("Adding {replacedGamePath} for {gameObject} ({filePath})", replacedGamePath, gameObject.ToString("X"), filePath);
+            //Logger.LogDebug("Adding {replacedGamePath} for {gameObject} ({filePath})", replacedGamePath, gameObject.ToString("X"), filePath);
             Mediator.Publish(new TransientResourceChangedMessage(gameObject));
         }
     }

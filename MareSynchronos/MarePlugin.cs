@@ -4,7 +4,6 @@ using MareSynchronos.PlayerData.Pairs;
 using MareSynchronos.PlayerData.Services;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
-using MareSynchronos.Services.ServerConfiguration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -70,18 +69,15 @@ public class MarePlugin : MediatorSubscriberBase, IHostedService
 {
     private readonly DalamudUtilService _dalamudUtil;
     private readonly MareConfigService _mareConfigService;
-    private readonly ServerConfigurationManager _serverConfigurationManager;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IServiceScope? _runtimeServiceScope;
     private Task? _launchTask = null;
 
-    public MarePlugin(ILogger<MarePlugin> logger, MareConfigService mareConfigService,
-        ServerConfigurationManager serverConfigurationManager,
+    public MarePlugin(ILogger<MarePlugin> Logger, MareConfigService mareConfigService,
         DalamudUtilService dalamudUtil,
-        IServiceScopeFactory serviceScopeFactory, MareMediator mediator) : base(logger, mediator)
+        IServiceScopeFactory serviceScopeFactory, MareMediator mediator) : base(Logger, mediator)
     {
         _mareConfigService = mareConfigService;
-        _serverConfigurationManager = serverConfigurationManager;
         _dalamudUtil = dalamudUtil;
         _serviceScopeFactory = serviceScopeFactory;
     }
@@ -89,9 +85,7 @@ public class MarePlugin : MediatorSubscriberBase, IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
-        Logger.LogInformation("Launching {name} {major}.{minor}.{build}", "Mare Synchronos", version.Major, version.Minor, version.Build);
-        Mediator.Publish(new EventMessage(new Services.Events.Event(nameof(MarePlugin), Services.Events.EventSeverity.Informational,
-            $"Starting Mare Synchronos {version.Major}.{version.Minor}.{version.Build}")));
+        //Logger.LogInformation("Launching {name} {major}.{minor}.{build}", "Mare Synchronos", version.Major, version.Minor, version.Build);
 
         Mediator.Subscribe<SwitchToMainUiMessage>(this, (msg) => { if (_launchTask == null || _launchTask.IsCompleted) _launchTask = Task.Run(WaitForPlayerAndLaunchCharacterManager); });
         Mediator.Subscribe<DalamudLoginMessage>(this, (_) => DalamudUtilOnLogIn());
@@ -108,20 +102,20 @@ public class MarePlugin : MediatorSubscriberBase, IHostedService
 
         DalamudUtilOnLogOut();
 
-        Logger.LogDebug("Halting MarePlugin");
+        //Logger.LogDebug("Halting MarePlugin");
 
         return Task.CompletedTask;
     }
 
     private void DalamudUtilOnLogIn()
     {
-        Logger?.LogDebug("Client login");
+        //Logger?.LogDebug("Client login");
         if (_launchTask == null || _launchTask.IsCompleted) _launchTask = Task.Run(WaitForPlayerAndLaunchCharacterManager);
     }
 
     private void DalamudUtilOnLogOut()
     {
-        Logger?.LogDebug("Client logout");
+        //Logger?.LogDebug("Client logout");
 
         _runtimeServiceScope?.Dispose();
     }
@@ -135,20 +129,12 @@ public class MarePlugin : MediatorSubscriberBase, IHostedService
 
         try
         {
-            Logger?.LogDebug("Launching Managers");
+            //Logger?.LogDebug("Launching Managers");
 
             _runtimeServiceScope?.Dispose();
             _runtimeServiceScope = _serviceScopeFactory.CreateScope();
-            _runtimeServiceScope.ServiceProvider.GetRequiredService<UiService>();
-            _runtimeServiceScope.ServiceProvider.GetRequiredService<CommandManagerService>();
-            if (!_mareConfigService.Current.HasValidSetup() || !_serverConfigurationManager.HasValidConfig())
-            {
-                Mediator.Publish(new SwitchToIntroUiMessage());
-                return;
-            }
             _runtimeServiceScope.ServiceProvider.GetRequiredService<CacheCreationService>();
             _runtimeServiceScope.ServiceProvider.GetRequiredService<TransientResourceManager>();
-            _runtimeServiceScope.ServiceProvider.GetRequiredService<OnlinePlayerManager>();
             _runtimeServiceScope.ServiceProvider.GetRequiredService<NotificationService>();
 
 #if !DEBUG
@@ -162,7 +148,7 @@ public class MarePlugin : MediatorSubscriberBase, IHostedService
         }
         catch (Exception ex)
         {
-            Logger?.LogCritical(ex, "Error during launch of managers");
+            //Logger?.LogCritical(ex, "Error during launch of managers");
         }
     }
 }

@@ -12,7 +12,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public class IpcProvider : IHostedService, IMediatorSubscriber
 {
-    private readonly ILogger<IpcProvider> _logger;
+    private readonly ILogger<IpcProvider> _Logger;
     private readonly IDalamudPluginInterface _pi;
     private readonly MareCharaFileManager _mareCharaFileManager;
     private readonly DalamudUtilService _dalamudUtil;
@@ -23,11 +23,11 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public MareMediator Mediator { get; init; }
 
-    public IpcProvider(ILogger<IpcProvider> logger, IDalamudPluginInterface pi,
+    public IpcProvider(ILogger<IpcProvider> Logger, IDalamudPluginInterface pi,
         MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
         MareMediator mareMediator)
     {
-        _logger = logger;
+        //_//Logger = //Logger;
         _pi = pi;
         _mareCharaFileManager = mareCharaFileManager;
         _dalamudUtil = dalamudUtil;
@@ -47,20 +47,20 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting IpcProviderService");
+        //_//Logger.LogInformation("Starting IpcProviderService");
         _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, bool>("MareSynchronos.LoadMcdf");
         _loadFileProvider.RegisterFunc(LoadMcdf);
         _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("MareSynchronos.LoadMcdfAsync");
         _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
         _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("MareSynchronos.GetHandledAddresses");
         _handledGameAddresses.RegisterFunc(GetHandledAddresses);
-        _logger.LogInformation("Started IpcProviderService");
+        //_//Logger.LogInformation("Started IpcProviderService");
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogDebug("Stopping IpcProvider Service");
+        //_//Logger.LogDebug("Stopping IpcProvider Service");
         _loadFileProvider?.UnregisterFunc();
         _loadFileAsyncProvider?.UnregisterFunc();
         _handledGameAddresses?.UnregisterFunc();
@@ -97,7 +97,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         }
         catch (Exception e)
         {
-            _logger.LogError(e, "Failure of IPC call");
+            //_//Logger.LogError(e, "Failure of IPC call");
         }
         finally
         {

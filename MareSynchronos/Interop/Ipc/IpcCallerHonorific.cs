@@ -17,14 +17,14 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _honorificLocalCharacterTitleChanged;
     private readonly ICallGateSubscriber<object> _honorificReady;
     private readonly ICallGateSubscriber<int, string, object> _honorificSetCharacterTitle;
-    private readonly ILogger<IpcCallerHonorific> _logger;
+    private readonly ILogger<IpcCallerHonorific> _Logger;
     private readonly MareMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
-    public IpcCallerHonorific(ILogger<IpcCallerHonorific> logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerHonorific(ILogger<IpcCallerHonorific> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         MareMediator mareMediator)
     {
-        _logger = logger;
+        //_//Logger = //Logger;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _honorificApiVersion = pi.GetIpcSubscriber<(uint, uint)>("Honorific.ApiVersion");
@@ -71,7 +71,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
             var gameObj = _dalamudUtil.CreateGameObject(character);
             if (gameObj is IPlayerCharacter c)
             {
-                _logger.LogTrace("Honorific removing for {addr}", c.Address.ToString("X"));
+                //_//Logger.LogTrace("Honorific removing for {addr}", c.Address.ToString("X"));
                 _honorificClearCharacterTitle!.InvokeAction(c.ObjectIndex);
             }
         }).ConfigureAwait(false);
@@ -87,7 +87,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
     public async Task SetTitleAsync(IntPtr character, string honorificDataB64)
     {
         if (!APIAvailable) return;
-        _logger.LogTrace("Applying Honorific data to {chara}", character.ToString("X"));
+        //_//Logger.LogTrace("Applying Honorific data to {chara}", character.ToString("X"));
         try
         {
             await _dalamudUtil.RunOnFrameworkThread(() =>
@@ -109,7 +109,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not apply Honorific data");
+            //_//Logger.LogWarning(e, "Could not apply Honorific data");
         }
     }
 

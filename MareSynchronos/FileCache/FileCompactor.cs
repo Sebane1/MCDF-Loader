@@ -13,15 +13,15 @@ public sealed class FileCompactor
     private readonly Dictionary<string, int> _clusterSizes;
 
     private readonly WOF_FILE_COMPRESSION_INFO_V1 _efInfo;
-    private readonly ILogger<FileCompactor> _logger;
+    private readonly ILogger<FileCompactor> _Logger;
 
     private readonly MareConfigService _mareConfigService;
     private readonly DalamudUtilService _dalamudUtilService;
 
-    public FileCompactor(ILogger<FileCompactor> logger, MareConfigService mareConfigService, DalamudUtilService dalamudUtilService)
+    public FileCompactor(ILogger<FileCompactor> Logger, MareConfigService mareConfigService, DalamudUtilService dalamudUtilService)
     {
         _clusterSizes = new(StringComparer.Ordinal);
-        _logger = logger;
+        //_//Logger = //Logger;
         _mareConfigService = mareConfigService;
         _dalamudUtilService = dalamudUtilService;
         _efInfo = new WOF_FILE_COMPRESSION_INFO_V1
@@ -82,7 +82,7 @@ public sealed class FileCompactor
     {
         await File.WriteAllBytesAsync(filePath, decompressedFile, token).ConfigureAwait(false);
 
-        if (_dalamudUtilService.IsWine || !_mareConfigService.Current.UseCompactor)
+        if (_dalamudUtilService.IsWine)
         {
             return;
         }
@@ -114,7 +114,7 @@ public sealed class FileCompactor
         bool isNTFS = string.Equals(fs.DriveFormat, "NTFS", StringComparison.OrdinalIgnoreCase);
         if (!isNTFS)
         {
-            _logger.LogWarning("Drive for file {file} is not NTFS", filePath);
+            //_//Logger.LogWarning("Drive for file {file} is not NTFS", filePath);
             return;
         }
 
@@ -124,29 +124,29 @@ public sealed class FileCompactor
 
         if (oldSize < Math.Max(clusterSize, 8 * 1024))
         {
-            _logger.LogDebug("File {file} is smaller than cluster size ({size}), ignoring", filePath, clusterSize);
+            //_//Logger.LogDebug("File {file} is smaller than cluster size ({size}), ignoring", filePath, clusterSize);
             return;
         }
 
         if (!IsCompactedFile(filePath))
         {
-            _logger.LogDebug("Compacting file to XPRESS8K: {file}", filePath);
+            //_//Logger.LogDebug("Compacting file to XPRESS8K: {file}", filePath);
 
             WOFCompressFile(filePath);
 
             var newSize = GetFileSizeOnDisk(fi);
 
-            _logger.LogDebug("Compressed {file} from {orig}b to {comp}b", filePath, oldSize, newSize);
+            //_//Logger.LogDebug("Compressed {file} from {orig}b to {comp}b", filePath, oldSize, newSize);
         }
         else
         {
-            _logger.LogDebug("File {file} already compressed", filePath);
+            //_//Logger.LogDebug("File {file} already compressed", filePath);
         }
     }
 
     private void DecompressFile(string path)
     {
-        _logger.LogDebug("Removing compression from {file}", path);
+        //_//Logger.LogDebug("Removing compression from {file}", path);
         try
         {
             using (var fs = new FileStream(path, FileMode.Open))
@@ -159,7 +159,7 @@ public sealed class FileCompactor
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error decompressing file {path}", path);
+            //_//Logger.LogWarning(ex, "Error decompressing file {path}", path);
         }
     }
 
@@ -169,11 +169,11 @@ public sealed class FileCompactor
         var root = fi.Directory?.Root.FullName.ToLower() ?? string.Empty;
         if (string.IsNullOrEmpty(root)) return -1;
         if (_clusterSizes.TryGetValue(root, out int value)) return value;
-        _logger.LogDebug("Getting Cluster Size for {path}, root {root}", fi.FullName, root);
+        //_//Logger.LogDebug("Getting Cluster Size for {path}, root {root}", fi.FullName, root);
         int result = GetDiskFreeSpaceW(root, out uint sectorsPerCluster, out uint bytesPerSector, out _, out _);
         if (result == 0) return -1;
         _clusterSizes[root] = (int)(sectorsPerCluster * bytesPerSector);
-        _logger.LogDebug("Determined Cluster Size for root {root}: {cluster}", root, _clusterSizes[root]);
+        //_//Logger.LogDebug("Determined Cluster Size for root {root}: {cluster}", root, _clusterSizes[root]);
         return _clusterSizes[root];
     }
 
@@ -199,21 +199,21 @@ public sealed class FileCompactor
 #pragma warning restore S3869 // "SafeHandle.DangerousGetHandle" should not be called
                 if (fs.SafeFileHandle.IsInvalid)
                 {
-                    _logger.LogWarning("Invalid file handle to {file}", path);
+                    //_//Logger.LogWarning("Invalid file handle to {file}", path);
                 }
                 else
                 {
                     var ret = WofSetFileDataLocation(hFile, WOF_PROVIDER_FILE, efInfoPtr, length);
                     if (!(ret == 0 || ret == unchecked((int)0x80070158)))
                     {
-                        _logger.LogWarning("Failed to compact {file}: {ret}", path, ret.ToString("X"));
+                        //_//Logger.LogWarning("Failed to compact {file}: {ret}", path, ret.ToString("X"));
                     }
                 }
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error compacting file {path}", path);
+            //_//Logger.LogWarning(ex, "Error compacting file {path}", path);
         }
         finally
         {

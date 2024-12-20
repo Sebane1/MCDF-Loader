@@ -9,7 +9,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed class IpcCallerPetNames : IIpcCaller
 {
-    private readonly ILogger<IpcCallerPetNames> _logger;
+    private readonly ILogger<IpcCallerPetNames> _Logger;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly MareMediator _mareMediator;
 
@@ -23,10 +23,10 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _setPlayerData;
     private readonly ICallGateSubscriber<ushort, object> _clearPlayerData;
 
-    public IpcCallerPetNames(ILogger<IpcCallerPetNames> logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerPetNames(ILogger<IpcCallerPetNames> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         MareMediator mareMediator)
     {
-        _logger = logger;
+        //_//Logger = //Logger;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
@@ -87,7 +87,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
         } 
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not obtain Pet Nicknames data");
+            //_//Logger.LogWarning(e, "Could not obtain Pet Nicknames data");
         }
 
         return string.Empty;
@@ -97,7 +97,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
     {
         if (!APIAvailable) return;
 
-        _logger.LogTrace("Applying Pet Nicknames data to {chara}", character.ToString("X"));
+        //_//Logger.LogTrace("Applying Pet Nicknames data to {chara}", character.ToString("X"));
 
         try
         {
@@ -119,7 +119,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not apply Pet Nicknames data");
+            //_//Logger.LogWarning(e, "Could not apply Pet Nicknames data");
         }
     }
 
@@ -133,14 +133,14 @@ public sealed class IpcCallerPetNames : IIpcCaller
                 var gameObj = _dalamudUtil.CreateGameObject(characterPointer);
                 if (gameObj is IPlayerCharacter pc)
                 {
-                    _logger.LogTrace("Pet Nicknames removing for {addr}", pc.Address.ToString("X"));
+                    //_//Logger.LogTrace("Pet Nicknames removing for {addr}", pc.Address.ToString("X"));
                     _clearPlayerData.InvokeAction(pc.ObjectIndex);
                 }
             }).ConfigureAwait(false);
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Could not clear Pet Nicknames data");
+            //_//Logger.LogWarning(e, "Could not clear Pet Nicknames data");
         }
     }
 

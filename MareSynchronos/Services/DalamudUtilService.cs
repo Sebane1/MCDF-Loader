@@ -21,15 +21,15 @@ namespace MareSynchronos.Services;
 public class DalamudUtilService : IHostedService, IMediatorSubscriber
 {
     private readonly List<uint> _classJobIdsIgnoredForPets = [30];
+    private readonly PerformanceCollectorService _performanceCollector;
     private readonly IClientState _clientState;
     private readonly ICondition _condition;
     private readonly IDataManager _gameData;
     private readonly BlockedCharacterHandler _blockedCharacterHandler;
     private readonly IFramework _framework;
     private readonly IGameGui _gameGui;
-    private readonly ILogger<DalamudUtilService> _logger;
+    private readonly ILogger<DalamudUtilService> _Logger;
     private readonly IObjectTable _objectTable;
-    private readonly PerformanceCollectorService _performanceCollector;
     private uint? _classJobId = 0;
     private DateTime _delayedFrameworkUpdateCheck = DateTime.UtcNow;
     private string _lastGlobalBlockPlayer = string.Empty;
@@ -39,11 +39,12 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly List<string> _notUpdatedCharas = [];
     private bool _sentBetweenAreas = false;
 
-    public DalamudUtilService(ILogger<DalamudUtilService> logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
+    public DalamudUtilService(ILogger<DalamudUtilService> Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
         IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager,
         BlockedCharacterHandler blockedCharacterHandler, MareMediator mediator, PerformanceCollectorService performanceCollector)
     {
-        _logger = logger;
+        _performanceCollector = performanceCollector;
+        //_//Logger = //Logger;
         _clientState = clientState;
         _objectTable = objectTable;
         _framework = framework;
@@ -52,24 +53,11 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         _gameData = gameData;
         _blockedCharacterHandler = blockedCharacterHandler;
         Mediator = mediator;
-        _performanceCollector = performanceCollector;
         WorldData = new(() =>
         {
             return gameData.GetExcelSheet<Lumina.Excel.Sheets.World>(Dalamud.Game.ClientLanguage.English)!
                 .Where(w => !w.Name.IsEmpty && w.DataCenter.RowId != 0 && (w.IsPublic || char.IsUpper(w.Name.ToString()[0])))
                 .ToDictionary(w => (ushort)w.RowId, w => w.Name.ToString());
-        });
-        mediator.Subscribe<TargetPairMessage>(this, (msg) =>
-        {
-            if (clientState.IsPvP) return;
-            var name = msg.Pair.PlayerName;
-            if (string.IsNullOrEmpty(name)) return;
-            var addr = _playerCharas.FirstOrDefault(f => string.Equals(f.Value.Name, name, StringComparison.Ordinal)).Value.Address;
-            if (addr == nint.Zero) return;
-            _ = RunOnFrameworkThread(() =>
-            {
-                targetManager.Target = CreateGameObject(addr);
-            }).ConfigureAwait(false);
         });
         IsWine = Util.IsWine();
     }
@@ -260,69 +248,66 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public async Task RunOnFrameworkThread(Action act, [CallerMemberName] string callerMember = "", [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         var fileName = Path.GetFileNameWithoutExtension(callerFilePath);
-        await _performanceCollector.LogPerformance(this, $"RunOnFramework:Act/{fileName}>{callerMember}:{callerLineNumber}", async () =>
-        {
-            if (!_framework.IsInFrameworkUpdateThread)
-            {
-                await _framework.RunOnFrameworkThread(act).ContinueWith((_) => Task.CompletedTask).ConfigureAwait(false);
-                while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
-                {
-                    _logger.LogTrace("Still on framework");
-                    await Task.Delay(1).ConfigureAwait(false);
-                }
-            }
-            else
-                act();
-        }).ConfigureAwait(false);
+        //await _performanceCollector.LogPerformance(this, $"RunOnFramework:Act/{fileName}>{callerMember}:{callerLineNumber}", async () =>
+        //{
+        //    if (!_framework.IsInFrameworkUpdateThread)
+        //    {
+        //        await _framework.RunOnFrameworkThread(act).ContinueWith((_) => Task.CompletedTask).ConfigureAwait(false);
+        //        while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
+        //        {
+        //            //_//Logger.LogTrace("Still on framework");
+        //            await Task.Delay(1).ConfigureAwait(false);
+        //        }
+        //    }
+        //    else
+        //        act();
+        //}).ConfigureAwait(false);
     }
 
     public async Task<T> RunOnFrameworkThread<T>(Func<T> func, [CallerMemberName] string callerMember = "", [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         var fileName = Path.GetFileNameWithoutExtension(callerFilePath);
-        return await _performanceCollector.LogPerformance(this, $"RunOnFramework:Func<{typeof(T)}>/{fileName}>{callerMember}:{callerLineNumber}", async () =>
+        if (!_framework.IsInFrameworkUpdateThread)
         {
-            if (!_framework.IsInFrameworkUpdateThread)
+            var result = await _framework.RunOnFrameworkThread(func).ContinueWith((task) => task.Result).ConfigureAwait(false);
+            while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
             {
-                var result = await _framework.RunOnFrameworkThread(func).ContinueWith((task) => task.Result).ConfigureAwait(false);
-                while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
-                {
-                    _logger.LogTrace("Still on framework");
-                    await Task.Delay(1).ConfigureAwait(false);
-                }
-                return result;
+                //_//Logger.LogTrace("Still on framework");
+                await Task.Delay(1).ConfigureAwait(false);
             }
+            return result;
+        }
 
-            return func.Invoke();
-        }).ConfigureAwait(false);
+        return func.Invoke();
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting DalamudUtilService");
+        //_//Logger.LogInformation("Starting DalamudUtilService");
         _framework.Update += FrameworkOnUpdate;
         if (IsLoggedIn)
         {
             _classJobId = _clientState.LocalPlayer!.ClassJob.RowId;
         }
 
-        _logger.LogInformation("Started DalamudUtilService");
+        //_//Logger.LogInformation("Started DalamudUtilService");
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _logger.LogTrace("Stopping {type}", GetType());
+        //_//Logger.LogTrace("Stopping {type}", GetType());
 
         Mediator.UnsubscribeAll(this);
         _framework.Update -= FrameworkOnUpdate;
         return Task.CompletedTask;
     }
 
-    public async Task WaitWhileCharacterIsDrawing(ILogger logger, GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
+    public async Task WaitWhileCharacterIsDrawing(ILogger Logger, GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
     {
         if (!_clientState.IsLoggedIn) return;
 
-        logger.LogTrace("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
+        //Logger.LogTrace("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
 
         const int tick = 250;
         int curWaitTime = 0;
@@ -332,20 +317,20 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                    && curWaitTime < timeOut
                    && await handler.IsBeingDrawnRunOnFrameworkAsync().ConfigureAwait(false)) // 0b100000000000 is "still rendering" or something
             {
-                logger.LogTrace("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
+                //Logger.LogTrace("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
                 curWaitTime += tick;
                 await Task.Delay(tick).ConfigureAwait(true);
             }
 
-            logger.LogTrace("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
+            //Logger.LogTrace("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
         }
         catch (NullReferenceException ex)
         {
-            logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            //Logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
         catch (AccessViolationException ex)
         {
-            logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            //Logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
     }
 
@@ -355,10 +340,10 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         var obj = (GameObject*)characterAddress;
         const int tick = 250;
         int curWaitTime = 0;
-        _logger.LogTrace("RenderFlags: {flags}", obj->RenderFlags.ToString("X"));
+        //_//Logger.LogTrace("RenderFlags: {flags}", obj->RenderFlags.ToString("X"));
         while (obj->RenderFlags != 0x00 && curWaitTime < timeOut)
         {
-            _logger.LogTrace($"Waiting for gpose actor to finish drawing");
+            //_//Logger.LogTrace($"Waiting for gpose actor to finish drawing");
             curWaitTime += tick;
             Thread.Sleep(tick);
         }
@@ -426,7 +411,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
         if (isDrawingChanged)
         {
-            _logger.LogTrace("Global draw block: START => {name} ({reason})", characterName, _lastGlobalBlockReason);
+            //_//Logger.LogTrace("Global draw block: START => {name} ({reason})", characterName, _lastGlobalBlockReason);
         }
 
         IsAnythingDrawing |= isDrawing;
@@ -449,84 +434,65 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         _performanceCollector.LogPerformance(this, $"FrameworkOnUpdateInternal+{(isNormalFrameworkUpdate ? "Regular" : "Delayed")}", () =>
         {
             IsAnythingDrawing = false;
-            _performanceCollector.LogPerformance(this, $"ObjTableToCharas",
-                () =>
+            _notUpdatedCharas.AddRange(_playerCharas.Keys);
+
+            for (int i = 0; i < 200; i += 2)
+            {
+                var chara = _objectTable[i];
+                if (chara == null || chara.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                    continue;
+
+                if (_blockedCharacterHandler.IsCharacterBlocked(chara.Address, out bool firstTime) && firstTime)
                 {
-                    _notUpdatedCharas.AddRange(_playerCharas.Keys);
+                    //_//Logger.LogTrace("Skipping character {addr}, blocked/muted", chara.Address.ToString("X"));
+                    continue;
+                }
 
-                    for (int i = 0; i < 200; i += 2)
-                    {
-                        var chara = _objectTable[i];
-                        if (chara == null || chara.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
-                            continue;
+                var charaName = ((GameObject*)chara.Address)->NameString;
+                var hash = GetHashedAccIdFromPlayerPointer(chara.Address);
+                if (!IsAnythingDrawing)
+                    CheckCharacterForDrawing(chara.Address, charaName);
+                _notUpdatedCharas.Remove(hash);
+                _playerCharas[hash] = (charaName, chara.Address);
+            }
 
-                        if (_blockedCharacterHandler.IsCharacterBlocked(chara.Address, out bool firstTime) && firstTime)
-                        {
-                            _logger.LogTrace("Skipping character {addr}, blocked/muted", chara.Address.ToString("X"));
-                            continue;
-                        }
+            foreach (var notUpdatedChara in _notUpdatedCharas)
+            {
+                _playerCharas.Remove(notUpdatedChara);
+            }
 
-                        var charaName = ((GameObject*)chara.Address)->NameString;
-                        var hash = GetHashedAccIdFromPlayerPointer(chara.Address);
-                        if (!IsAnythingDrawing)
-                            CheckCharacterForDrawing(chara.Address, charaName);
-                        _notUpdatedCharas.Remove(hash);
-                        _playerCharas[hash] = (charaName, chara.Address);
-                    }
-
-                    foreach (var notUpdatedChara in _notUpdatedCharas)
-                    {
-                        _playerCharas.Remove(notUpdatedChara);
-                    }
-
-                    _notUpdatedCharas.Clear();
-                });
+            _notUpdatedCharas.Clear();
 
             if (!IsAnythingDrawing && !string.IsNullOrEmpty(_lastGlobalBlockPlayer))
             {
-                _logger.LogTrace("Global draw block: END => {name}", _lastGlobalBlockPlayer);
+                //_//Logger.LogTrace("Global draw block: END => {name}", _lastGlobalBlockPlayer);
                 _lastGlobalBlockPlayer = string.Empty;
                 _lastGlobalBlockReason = string.Empty;
             }
 
             if (GposeTarget != null && !IsInGpose)
             {
-                _logger.LogDebug("Gpose start");
+                //_//Logger.LogDebug("Gpose start");
                 IsInGpose = true;
                 Mediator.Publish(new GposeStartMessage());
             }
             else if (GposeTarget == null && IsInGpose)
             {
-                _logger.LogDebug("Gpose end");
+                //_//Logger.LogDebug("Gpose end");
                 IsInGpose = false;
                 Mediator.Publish(new GposeEndMessage());
             }
 
-            if ((_condition[ConditionFlag.Performing] || _condition[ConditionFlag.InCombat]) && !IsInCombatOrPerforming)
-            {
-                _logger.LogDebug("Combat/Performance start");
-                IsInCombatOrPerforming = true;
-                Mediator.Publish(new CombatOrPerformanceStartMessage());
-                Mediator.Publish(new HaltScanMessage(nameof(IsInCombatOrPerforming)));
-            }
-            else if ((!_condition[ConditionFlag.Performing] && !_condition[ConditionFlag.InCombat]) && IsInCombatOrPerforming)
-            {
-                _logger.LogDebug("Combat/Performance end");
-                IsInCombatOrPerforming = false;
-                Mediator.Publish(new CombatOrPerformanceEndMessage());
-                Mediator.Publish(new ResumeScanMessage(nameof(IsInCombatOrPerforming)));
-            }
-
             if (_condition[ConditionFlag.WatchingCutscene] && !IsInCutscene)
             {
-                _logger.LogDebug("Cutscene start");
+                //_//Logger.LogDebug("Cutscene start");
                 IsInCutscene = true;
                 Mediator.Publish(new CutsceneStartMessage());
                 Mediator.Publish(new HaltScanMessage(nameof(IsInCutscene)));
             }
             else if (!_condition[ConditionFlag.WatchingCutscene] && IsInCutscene)
             {
-                _logger.LogDebug("Cutscene end");
+                //_//Logger.LogDebug("Cutscene end");
                 IsInCutscene = false;
                 Mediator.Publish(new CutsceneEndMessage());
                 Mediator.Publish(new ResumeScanMessage(nameof(IsInCutscene)));
@@ -546,7 +512,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                     _lastZone = zone;
                     if (!_sentBetweenAreas)
                     {
-                        _logger.LogDebug("Zone switch/Gpose start");
+                        //_//Logger.LogDebug("Zone switch/Gpose start");
                         _sentBetweenAreas = true;
                         Mediator.Publish(new ZoneSwitchStartMessage());
                         Mediator.Publish(new HaltScanMessage(nameof(ConditionFlag.BetweenAreas)));
@@ -558,7 +524,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
             if (_sentBetweenAreas)
             {
-                _logger.LogDebug("Zone switch/Gpose end");
+                //_//Logger.LogDebug("Zone switch/Gpose end");
                 _sentBetweenAreas = false;
                 Mediator.Publish(new ZoneSwitchEndMessage());
                 Mediator.Publish(new ResumeScanMessage(nameof(ConditionFlag.BetweenAreas)));
@@ -580,14 +546,14 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
             if (localPlayer != null && !IsLoggedIn)
             {
-                _logger.LogDebug("Logged in");
+                //_//Logger.LogDebug("Logged in");
                 IsLoggedIn = true;
                 _lastZone = _clientState.TerritoryType;
                 Mediator.Publish(new DalamudLoginMessage());
             }
             else if (localPlayer == null && IsLoggedIn)
             {
-                _logger.LogDebug("Logged out");
+                //_//Logger.LogDebug("Logged out");
                 IsLoggedIn = false;
                 Mediator.Publish(new DalamudLogoutMessage());
             }

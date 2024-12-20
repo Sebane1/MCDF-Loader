@@ -8,7 +8,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed class IpcCallerHeels : IIpcCaller
 {
-    private readonly ILogger<IpcCallerHeels> _logger;
+    private readonly ILogger<IpcCallerHeels> _Logger;
     private readonly MareMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly ICallGateSubscriber<(int, int)> _heelsGetApiVersion;
@@ -17,9 +17,9 @@ public sealed class IpcCallerHeels : IIpcCaller
     private readonly ICallGateSubscriber<int, string, object?> _heelsRegisterPlayer;
     private readonly ICallGateSubscriber<int, object?> _heelsUnregisterPlayer;
 
-    public IpcCallerHeels(ILogger<IpcCallerHeels> logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, MareMediator mareMediator)
+    public IpcCallerHeels(Logger<IpcCallerHeels> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, MareMediator mareMediator)
     {
-        _logger = logger;
+        //_//Logger = //Logger;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _heelsGetApiVersion = pi.GetIpcSubscriber<(int, int)>("SimpleHeels.ApiVersion");
@@ -54,7 +54,7 @@ public sealed class IpcCallerHeels : IIpcCaller
             var gameObj = _dalamudUtil.CreateGameObject(character);
             if (gameObj != null)
             {
-                _logger.LogTrace("Restoring Heels data to {chara}", character.ToString("X"));
+                //_//Logger.LogTrace("Restoring Heels data to {chara}", character.ToString("X"));
                 _heelsUnregisterPlayer.InvokeAction(gameObj.ObjectIndex);
             }
         }).ConfigureAwait(false);
@@ -68,7 +68,7 @@ public sealed class IpcCallerHeels : IIpcCaller
             var gameObj = _dalamudUtil.CreateGameObject(character);
             if (gameObj != null)
             {
-                _logger.LogTrace("Applying Heels data to {chara}", character.ToString("X"));
+                //_//Logger.LogTrace("Applying Heels data to {chara}", character.ToString("X"));
                 _heelsRegisterPlayer.InvokeAction(gameObj.ObjectIndex, data);
             }
         }).ConfigureAwait(false);

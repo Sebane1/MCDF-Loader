@@ -11,18 +11,16 @@ public sealed class MareMediator : IHostedService
 {
     private readonly object _addRemoveLock = new();
     private readonly ConcurrentDictionary<object, DateTime> _lastErrorTime = [];
-    private readonly ILogger<MareMediator> _logger;
+    private readonly ILogger<MareMediator> _Logger;
     private readonly CancellationTokenSource _loopCts = new();
     private readonly ConcurrentQueue<MessageBase> _messageQueue = new();
-    private readonly PerformanceCollectorService _performanceCollector;
     private readonly MareConfigService _mareConfigService;
     private readonly ConcurrentDictionary<Type, HashSet<SubscriberAction>> _subscriberDict = [];
     private bool _processQueue = false;
     private readonly ConcurrentDictionary<Type, MethodInfo?> _genericExecuteMethods = new();
-    public MareMediator(ILogger<MareMediator> logger, PerformanceCollectorService performanceCollector, MareConfigService mareConfigService)
+    public MareMediator(ILogger<MareMediator> Logger, MareConfigService mareConfigService)
     {
-        _logger = logger;
-        _performanceCollector = performanceCollector;
+        //_//Logger = //Logger;
         _mareConfigService = mareConfigService;
     }
 
@@ -31,7 +29,7 @@ public sealed class MareMediator : IHostedService
         foreach (var subscriber in _subscriberDict.SelectMany(c => c.Value.Select(v => v.Subscriber))
             .DistinctBy(p => p).OrderBy(p => p.GetType().FullName, StringComparer.Ordinal).ToList())
         {
-            _logger.LogInformation("Subscriber {type}: {sub}", subscriber.GetType().Name, subscriber.ToString());
+            //_//Logger.LogInformation("Subscriber {type}: {sub}", subscriber.GetType().Name, subscriber.ToString());
             StringBuilder sb = new();
             sb.Append("=> ");
             foreach (var item in _subscriberDict.Where(item => item.Value.Any(v => v.Subscriber == subscriber)).ToList())
@@ -39,9 +37,9 @@ public sealed class MareMediator : IHostedService
                 sb.Append(item.Key.Name).Append(", ");
             }
 
-            if (!string.Equals(sb.ToString(), "=> ", StringComparison.Ordinal))
-                _logger.LogInformation("{sb}", sb.ToString());
-            _logger.LogInformation("---");
+            //if (!string.Equals(sb.ToString(), "=> ", StringComparison.Ordinal))
+            //    //_//Logger.LogInformation("{sb}", sb.ToString());
+            ////_//Logger.LogInformation("---");
         }
     }
 
@@ -59,7 +57,7 @@ public sealed class MareMediator : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting MareMediator");
+        //_//Logger.LogInformation("Starting MareMediator");
 
         _ = Task.Run(async () =>
         {
@@ -83,7 +81,7 @@ public sealed class MareMediator : IHostedService
             }
         });
 
-        _logger.LogInformation("Started MareMediator");
+        //_//Logger.LogInformation("Started MareMediator");
 
         return Task.CompletedTask;
     }
@@ -106,7 +104,7 @@ public sealed class MareMediator : IHostedService
                 throw new InvalidOperationException("Already subscribed");
             }
 
-            _logger.LogDebug("Subscriber added for message {message}: {sub}", typeof(T).Name, subscriber.GetType().Name);
+            //_//Logger.LogDebug("Subscriber added for message {message}: {sub}", typeof(T).Name, subscriber.GetType().Name);
         }
     }
 
@@ -130,7 +128,7 @@ public sealed class MareMediator : IHostedService
                 int unSubbed = _subscriberDict[kvp]?.RemoveWhere(p => p.Subscriber == subscriber) ?? 0;
                 if (unSubbed > 0)
                 {
-                    _logger.LogDebug("{sub} unsubscribed from {msg}", subscriber.GetType().Name, kvp.Name);
+                    //_//Logger.LogDebug("{sub} unsubscribed from {msg}", subscriber.GetType().Name, kvp.Name);
                 }
             }
         }
@@ -165,24 +163,13 @@ public sealed class MareMediator : IHostedService
         {
             try
             {
-                if (_mareConfigService.Current.LogPerformance)
-                {
-                    var isSameThread = message.KeepThreadContext ? "$" : string.Empty;
-                    _performanceCollector.LogPerformance(this, $"{isSameThread}Execute>{message.GetType().Name}+{subscriber.Subscriber.GetType().Name}>{subscriber.Subscriber}",
-                        () => ((Action<T>)subscriber.Action).Invoke(message));
-                }
-                else
-                {
-                    ((Action<T>)subscriber.Action).Invoke(message);
-                }
+                ((Action<T>)subscriber.Action).Invoke(message);
             }
             catch (Exception ex)
             {
                 if (_lastErrorTime.TryGetValue(subscriber, out var lastErrorTime) && lastErrorTime.Add(TimeSpan.FromSeconds(10)) > DateTime.UtcNow)
                     continue;
 
-                _logger.LogError(ex.InnerException ?? ex, "Error executing {type} for subscriber {subscriber}",
-                    message.GetType().Name, subscriber.Subscriber.GetType().Name);
                 _lastErrorTime[subscriber] = DateTime.UtcNow;
             }
         }
@@ -190,7 +177,7 @@ public sealed class MareMediator : IHostedService
 
     public void StartQueueProcessing()
     {
-        _logger.LogInformation("Starting Message Queue Processing");
+        //_//Logger.LogInformation("Starting Message Queue Processing");
         _processQueue = true;
     }
 
