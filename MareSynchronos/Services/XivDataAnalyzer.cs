@@ -14,12 +14,12 @@ namespace MareSynchronos.Services;
 
 public sealed class XivDataAnalyzer
 {
-    private readonly ILogger<XivDataAnalyzer> _logger;
+    private readonly IPluginLog<XivDataAnalyzer> _logger;
     private readonly FileCacheManager _fileCacheManager;
     private readonly XivDataStorageService _configService;
     private readonly List<string> _failedCalculatedTris = [];
 
-    public XivDataAnalyzer(ILogger<XivDataAnalyzer> logger, FileCacheManager fileCacheManager,
+    public XivDataAnalyzer(IPluginLog<XivDataAnalyzer> logger, FileCacheManager fileCacheManager,
         XivDataStorageService configService)
     {
         _logger = logger;
@@ -39,7 +39,7 @@ public sealed class XivDataAnalyzer
             for (int i = 0; i < chara->Skeleton->PartialSkeletonCount; i++)
             {
                 var handle = *(resHandles + i);
-                _logger.LogTrace("Iterating over SkeletonResourceHandle #{i}:{x}", i, ((nint)handle).ToString("X"));
+                _logger.Debug("Iterating over SkeletonResourceHandle #{i}:{x}", i, ((nint)handle).ToString("X"));
                 if ((nint)handle == nint.Zero) continue;
                 var curBones = handle->BoneCount;
                 // this is unrealistic, the filename shouldn't ever be that long
@@ -57,7 +57,7 @@ public sealed class XivDataAnalyzer
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not process skeleton data");
+            _logger.Warning(ex, "Could not process skeleton data");
         }
 
         return (outputIndices.Count != 0 && outputIndices.Values.All(u => u.Count > 0)) ? outputIndices : null;
@@ -137,7 +137,7 @@ public sealed class XivDataAnalyzer
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not load havok file in {path}", tempHavokDataPath);
+            _logger.Warning(ex, "Could not load havok file in {path}", tempHavokDataPath);
         }
         finally
         {
@@ -166,7 +166,7 @@ public sealed class XivDataAnalyzer
 
         try
         {
-            _logger.LogDebug("Detected Model File {path}, calculating Tris", filePath);
+            _logger.Debug("Detected Model File {path}, calculating Tris", filePath);
             var file = new MdlFile(filePath);
             if (file.LodCount <= 0)
             {
@@ -187,13 +187,13 @@ public sealed class XivDataAnalyzer
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogDebug(ex, "Could not load lod mesh {mesh} from path {path}", i, filePath);
+                    _logger.Debug(ex, "Could not load lod mesh {mesh} from path {path}", i, filePath);
                     continue;
                 }
 
                 if (tris > 0)
                 {
-                    _logger.LogDebug("TriAnalysis: {filePath} => {tris} triangles", filePath, tris);
+                    _logger.Debug("TriAnalysis: {filePath} => {tris} triangles", filePath, tris);
                     _configService.Current.TriangleDictionary[hash] = tris;
                     _configService.Save();
                     break;
@@ -207,7 +207,7 @@ public sealed class XivDataAnalyzer
             _failedCalculatedTris.Add(hash);
             _configService.Current.TriangleDictionary[hash] = 0;
             _configService.Save();
-            _logger.LogWarning(e, "Could not parse file {file}", filePath);
+            _logger.Warning(e, "Could not parse file {file}", filePath);
             return 0;
         }
     }

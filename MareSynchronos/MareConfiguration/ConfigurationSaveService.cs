@@ -9,13 +9,13 @@ namespace MareSynchronos.MareConfiguration;
 public class ConfigurationSaveService : IHostedService
 {
     private readonly HashSet<object> _configsToSave = [];
-    private readonly ILogger<ConfigurationSaveService> _logger;
+    private readonly IPluginLog<ConfigurationSaveService> _logger;
     private readonly SemaphoreSlim _configSaveSemaphore = new(1, 1);
     private readonly CancellationTokenSource _configSaveCheckCts = new();
     public const string BackupFolder = "config_backup";
     private readonly MethodInfo _saveMethod;
 
-    public ConfigurationSaveService(ILogger<ConfigurationSaveService> logger, IEnumerable<IConfigService<IMareConfiguration>> configs)
+    public ConfigurationSaveService(IPluginLog<ConfigurationSaveService> logger, IEnumerable<IConfigService<IMareConfiguration>> configs)
     {
         foreach (var config in configs)
         {
@@ -44,7 +44,7 @@ public class ConfigurationSaveService : IHostedService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during SaveConfigs");
+                _logger.Error(ex, "Error during SaveConfigs");
             }
 
             await Task.Delay(TimeSpan.FromSeconds(5), ct).ConfigureAwait(false);
@@ -70,7 +70,7 @@ public class ConfigurationSaveService : IHostedService
 
     private async Task SaveConfig<T>(IConfigService<T> config) where T : IMareConfiguration
     {
-        _logger.LogTrace("Saving {configName}", config.ConfigurationName);
+        _logger.Debug("Saving {configName}", config.ConfigurationName);
         var configDir = config.ConfigurationPath.Replace(config.ConfigurationName, string.Empty);
 
         try
@@ -94,7 +94,7 @@ public class ConfigurationSaveService : IHostedService
             }
 
             string backupPath = Path.Combine(configBackupFolder, configNameSplit[0] + "." + DateTime.Now.ToString("yyyyMMddHHmmss") + "." + configNameSplit[1]);
-            _logger.LogTrace("Backing up current config to {backupPath}", backupPath);
+            _logger.Debug("Backing up current config to {backupPath}", backupPath);
             File.Copy(config.ConfigurationPath, backupPath, overwrite: true);
             FileInfo fi = new(backupPath);
             fi.LastWriteTimeUtc = DateTime.UtcNow;
@@ -102,7 +102,7 @@ public class ConfigurationSaveService : IHostedService
         catch (Exception ex)
         {
             // ignore if file cannot be backupped
-            _logger.LogWarning(ex, "Could not create backup for {config}", config.ConfigurationPath);
+            _logger.Warning(ex, "Could not create backup for {config}", config.ConfigurationPath);
         }
 
         var temp = config.ConfigurationPath + ".tmp";
@@ -117,7 +117,7 @@ public class ConfigurationSaveService : IHostedService
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Error during config save of {config}", config.ConfigurationName);
+            _logger.Warning(ex, "Error during config save of {config}", config.ConfigurationName);
         }
     }
 

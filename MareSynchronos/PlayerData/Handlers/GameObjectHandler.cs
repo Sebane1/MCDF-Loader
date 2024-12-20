@@ -23,7 +23,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     private byte _classJob = 0;
     private CancellationTokenSource _zoningCts = new();
 
-    public GameObjectHandler(ILogger<GameObjectHandler> Logger, PerformanceCollectorService performanceCollectorService,
+    public GameObjectHandler(IPluginLog<GameObjectHandler> Logger, PerformanceCollectorService performanceCollectorService,
         McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base(Logger, mediator)
     {
         ObjectKind = objectKind;
@@ -201,7 +201,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
         {
             if (_clearCts != null)
             {
-                //Logger.LogDebug("[{this}] Cancelling Clear Task", this);
+                Logger.Debug("[{this}] Cancelling Clear Task", this);
                 //_clearCts.CancelDispose();
                 _clearCts = null;
             }
@@ -220,7 +220,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
                 var classJob = chara->CharacterData.ClassJob;
                 if (classJob != _classJob)
                 {
-                    //Logger.LogTrace("[{this}] classjob changed from {old} to {new}", this, _classJob, classJob);
+                    Logger.Debug("[{this}] classjob changed from {old} to {new}", this, _classJob, classJob);
                     _classJob = classJob;
                     Mediator.Publish(new ClassJobChangedMessage(this));
                 }
@@ -233,18 +233,18 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
                 equipDiff |= CompareAndUpdateOffHand((Weapon*)oh.DrawObject);
 
                 if (equipDiff){}
-                    //Logger.LogTrace("Checking [{this}] equip data as human from draw obj, result: {diff}", this, equipDiff);
+                    Logger.Debug("Checking [{this}] equip data as human from draw obj, result: {diff}", this, equipDiff);
             }
             else
             {
                 equipDiff = CompareAndUpdateEquipByteData((byte*)Unsafe.AsPointer(ref chara->DrawData.EquipmentModelIds[0]));
                 if (equipDiff){}
-                    //Logger.LogTrace("Checking [{this}] equip data from game obj, result: {diff}", this, equipDiff);
+                    Logger.Debug("Checking [{this}] equip data from game obj, result: {diff}", this, equipDiff);
             }
 
             if (equipDiff && !_isOwnedObject && !_ignoreSendAfterRedraw) // send the message out immediately and cancel out, no reason to continue if not self
             {
-                //Logger.LogTrace("[{this}] Changed", this);
+                Logger.Debug("[{this}] Changed", this);
                 Mediator.Publish(new CharacterChangedMessage(this));
                 return;
             }
@@ -260,24 +260,24 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
 
                 customizeDiff = CompareAndUpdateCustomizeData(((Human*)DrawObjectAddress)->Customize.Data);
                 if (customizeDiff){}
-                    //Logger.LogTrace("Checking [{this}] customize data as human from draw obj, result: {diff}", this, customizeDiff);
+                    Logger.Debug("Checking [{this}] customize data as human from draw obj, result: {diff}", this, customizeDiff);
             }
             else
             {
                 customizeDiff = CompareAndUpdateCustomizeData(chara->DrawData.CustomizeData.Data);
                 if (customizeDiff){}
-                    //Logger.LogTrace("Checking [{this}] customize data from game obj, result: {diff}", this, equipDiff);
+                    Logger.Debug("Checking [{this}] customize data from game obj, result: {diff}", this, equipDiff);
             }
 
             if ((addrDiff || drawObjDiff || equipDiff || customizeDiff || nameChange) && _isOwnedObject)
             {
-                //Logger.LogDebug("[{this}] Changed, Sending CreateCacheObjectMessage", this);
+                Logger.Debug("[{this}] Changed, Sending CreateCacheObjectMessage", this);
                 Mediator.Publish(new CreateCacheForObjectMessage(this));
             }
         }
         else if (addrDiff || drawObjDiff)
         {
-            //Logger.LogTrace("[{this}] Changed", this);
+            Logger.Debug("[{this}] Changed", this);
             if (_isOwnedObject && ObjectKind != ObjectKind.Player)
             {
                 //_clearCts?.CancelDispose();
@@ -290,9 +290,9 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
 
     private async Task ClearAsync(CancellationToken token)
     {
-        //Logger.LogDebug("[{this}] Running Clear Task", this);
+        Logger.Debug("[{this}] Running Clear Task", this);
         await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
-        //Logger.LogDebug("[{this}] Sending ClearCachedForObjectMessage", this);
+        Logger.Debug("[{this}] Sending ClearCachedForObjectMessage", this);
         Mediator.Publish(new ClearCacheForObjectMessage(this));
         _clearCts = null;
     }
@@ -367,7 +367,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            //Logger.LogWarning(ex, "Error during FrameworkUpdate of {this}", this);
+            Logger.Warning(ex, "Error during FrameworkUpdate of {this}", this);
         }
     }
 
@@ -379,18 +379,18 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     private bool IsBeingDrawn()
     {
         var curPtr = _getAddress();
-        //Logger.LogTrace("[{this}] IsBeingDrawn, CurPtr: {ptr}", this, curPtr.ToString("X"));
+        Logger.Debug("[{this}] IsBeingDrawn, CurPtr: {ptr}", this, curPtr.ToString("X"));
 
         if (curPtr == IntPtr.Zero && _ptrNullCounter < 2)
         {
-            //Logger.LogTrace("[{this}] IsBeingDrawn, CurPtr is ZERO, counter is {cnt}", this, _ptrNullCounter);
+            Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, counter is {cnt}", this, _ptrNullCounter);
             _ptrNullCounter++;
             return true;
         }
 
         if (curPtr == IntPtr.Zero)
         {
-            //Logger.LogTrace("[{this}] IsBeingDrawn, CurPtr is ZERO, returning", this);
+            Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, returning", this);
 
             Address = IntPtr.Zero;
             DrawObjectAddress = IntPtr.Zero;
@@ -399,14 +399,14 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
 
         if (_dalamudUtil.IsAnythingDrawing)
         {
-            //Logger.LogTrace("[{this}] IsBeingDrawn, Global draw block", this);
+            Logger.Debug("[{this}] IsBeingDrawn, Global draw block", this);
             return true;
         }
 
         var drawObj = GetDrawObjUnsafe(curPtr);
-        //Logger.LogTrace("[{this}] IsBeingDrawn, DrawObjPtr: {ptr}", this, drawObj.ToString("X"));
+        Logger.Debug("[{this}] IsBeingDrawn, DrawObjPtr: {ptr}", this, drawObj.ToString("X"));
         var isDrawn = IsBeingDrawnUnsafe(drawObj, curPtr);
-        //Logger.LogTrace("[{this}] IsBeingDrawn, Condition: {cond}", this, isDrawn);
+        Logger.Debug("[{this}] IsBeingDrawn, Condition: {cond}", this, isDrawn);
         return isDrawn != DrawCondition.None;
     }
 
@@ -446,7 +446,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            //Logger.LogWarning(ex, "Zoning CTS cancel issue");
+            Logger.Warning(ex, "Zoning CTS cancel issue");
         }
     }
 
@@ -455,7 +455,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
         if (!_isOwnedObject || _haltProcessing) return;
 
         _zoningCts = new();
-        //Logger.LogDebug("[{obj}] Starting Delay After Zoning", this);
+        Logger.Debug("[{obj}] Starting Delay After Zoning", this);
         _delayedZoningTask = Task.Run(async () =>
         {
             try
@@ -468,7 +468,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
             }
             finally
             {
-                //Logger.LogDebug("[{this}] Delay after zoning complete", this);
+                Logger.Debug("[{this}] Delay after zoning complete", this);
                 _zoningCts.Dispose();
             }
         });

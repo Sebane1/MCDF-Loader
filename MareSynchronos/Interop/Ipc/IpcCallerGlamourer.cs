@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
 using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
 using MareSynchronos.MareConfiguration.Models;
@@ -12,7 +13,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcCaller
 {
-    private readonly ILogger<IpcCallerGlamourer> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly IDalamudPluginInterface _pi;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly McdfMediator _mareMediator;
@@ -30,7 +31,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private bool _shownGlamourerUnavailable = false;
     private readonly uint LockCode = 0x6D617265;
 
-    public IpcCallerGlamourer(ILogger<IpcCallerGlamourer> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
+    public IpcCallerGlamourer(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
         RedrawManager redrawManager) : base(Logger, mareMediator)
     {
         _glamourerApiVersions = new ApiVersion(pi);
@@ -41,7 +42,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         _glamourerUnlock = new UnlockState(pi);
         _glamourerUnlockByName = new UnlockStateName(pi);
 
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _pi = pi;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
@@ -103,7 +104,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task ApplyAllAsync(ILogger Logger, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
+    public async Task ApplyAllAsync(IPluginLog Logger, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
     {
         if (!APIAvailable || string.IsNullOrEmpty(customization) || _dalamudUtil.IsZoning) return;
 
@@ -116,12 +117,12 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
             {
                 try
                 {
-                    //Logger.LogDebug("[{appid}] Calling on IPC: GlamourerApplyAll", applicationId);
+                    Logger.Debug("[{appid}] Calling on IPC: GlamourerApplyAll", applicationId);
                     _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, LockCode);
                 }
                 catch (Exception ex)
                 {
-                    //Logger.LogWarning(ex, "[{appid}] Failed to apply Glamourer data", applicationId);
+                    Logger.Warning(ex, "[{appid}] Failed to apply Glamourer data", applicationId);
                 }
             }, token).ConfigureAwait(false);
         }
@@ -152,7 +153,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertAsync(ILogger Logger, string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
+    public async Task RevertAsync(IPluginLog Logger, string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
         try
@@ -162,17 +163,17 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
             {
                 try
                 {
-                    //Logger.LogDebug("[{appid}] Calling On IPC: GlamourerUnlockName", applicationId);
+                    Logger.Debug("[{appid}] Calling On IPC: GlamourerUnlockName", applicationId);
                     _glamourerUnlock.Invoke(chara.ObjectIndex, LockCode);
-                    //Logger.LogDebug("[{appid}] Calling On IPC: GlamourerRevert", applicationId);
+                    Logger.Debug("[{appid}] Calling On IPC: GlamourerRevert", applicationId);
                     _glamourerRevert.Invoke(chara.ObjectIndex, LockCode);
-                    //Logger.LogDebug("[{appid}] Calling On IPC: PenumbraRedraw", applicationId);
+                    Logger.Debug("[{appid}] Calling On IPC: PenumbraRedraw", applicationId);
 
                     _mareMediator.Publish(new PenumbraRedrawCharacterMessage(chara));
                 }
                 catch (Exception ex)
                 {
-                    //Logger.LogWarning(ex, "[{appid}] Error during GlamourerRevert", applicationId);
+                    Logger.Warning(ex, "[{appid}] Error during GlamourerRevert", applicationId);
                 }
             }, token).ConfigureAwait(false);
         }
@@ -182,7 +183,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertByNameAsync(ILogger Logger, string name, Guid applicationId)
+    public async Task RevertByNameAsync(IPluginLog Logger, string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 
@@ -193,20 +194,20 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }).ConfigureAwait(false);
     }
 
-    public void RevertByName(ILogger Logger, string name, Guid applicationId)
+    public void RevertByName(IPluginLog Logger, string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 
         try
         {
-            //Logger.LogDebug("[{appid}] Calling On IPC: GlamourerRevertByName", applicationId);
+            Logger.Debug("[{appid}] Calling On IPC: GlamourerRevertByName", applicationId);
             _glamourerRevertByName.Invoke(name, LockCode);
-            //Logger.LogDebug("[{appid}] Calling On IPC: GlamourerUnlockName", applicationId);
+            Logger.Debug("[{appid}] Calling On IPC: GlamourerUnlockName", applicationId);
             _glamourerUnlockByName.Invoke(name, LockCode);
         }
         catch (Exception ex)
         {
-            //_//Logger.LogWarning(ex, "Error during Glamourer RevertByName");
+            _Logger.Warning(ex, "Error during Glamourer RevertByName");
         }
     }
 

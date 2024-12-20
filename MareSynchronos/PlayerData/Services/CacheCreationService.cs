@@ -25,14 +25,14 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
     private bool _isZoning = false;
     private readonly Dictionary<ObjectKind, CancellationTokenSource> _glamourerCts = new();
 
-    public CacheCreationService(ILogger<CacheCreationService> logger, McdfMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
+    public CacheCreationService(IPluginLog<CacheCreationService> logger, McdfMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
         PlayerDataFactory characterDataFactory, DalamudUtilService dalamudUtil) : base(logger, mediator)
     {
         _characterDataFactory = characterDataFactory;
 
         Mediator.Subscribe<CreateCacheForObjectMessage>(this, (msg) =>
         {
-            Logger.LogDebug("Received CreateCacheForObject for {handler}, updating", msg.ObjectToCreateFor);
+            Logger.Debug("Received CreateCacheForObject for {handler}, updating", msg.ObjectToCreateFor);
             _cacheCreateLock.Wait();
             _cachesToCreate[msg.ObjectToCreateFor.ObjectKind] = msg.ObjectToCreateFor;
             _cacheCreateLock.Release();
@@ -54,7 +54,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
         {
             if (msg.GameObjectHandler != _playerRelatedObjects[ObjectKind.Player]) return;
 
-            Logger.LogTrace("Removing pet data for {obj}", msg.GameObjectHandler);
+            Logger.Debug("Removing pet data for {obj}", msg.GameObjectHandler);
             _playerData.FileReplacements.Remove(ObjectKind.Pet);
             _playerData.GlamourerString.Remove(ObjectKind.Pet);
             _playerData.CustomizePlusScale.Remove(ObjectKind.Pet);
@@ -67,7 +67,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
             if (msg.ObjectToCreateFor == _playerRelatedObjects[ObjectKind.Pet]) return;
             _ = Task.Run(() =>
             {
-                Logger.LogTrace("Clearing cache for {obj}", msg.ObjectToCreateFor);
+                Logger.Debug("Clearing cache for {obj}", msg.ObjectToCreateFor);
                 _playerData.FileReplacements.Remove(msg.ObjectToCreateFor.ObjectKind);
                 _playerData.GlamourerString.Remove(msg.ObjectToCreateFor.ObjectKind);
                 _playerData.CustomizePlusScale.Remove(msg.ObjectToCreateFor.ObjectKind);
@@ -85,7 +85,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
                     .Where(item => msg.Address == null
                     || item.Value.Address == msg.Address).Select(k => k.Key))
                 {
-                    Logger.LogDebug("Received CustomizePlus change, updating {obj}", item);
+                    Logger.Debug("Received CustomizePlus change, updating {obj}", item);
                     await AddPlayerCacheToCreate(item).ConfigureAwait(false);
                 }
             });
@@ -93,7 +93,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
         Mediator.Subscribe<HeelsOffsetMessage>(this, (msg) =>
         {
             if (_isZoning) return;
-            Logger.LogDebug("Received Heels Offset change, updating player");
+            Logger.Debug("Received Heels Offset change, updating player");
             _ = AddPlayerCacheToCreate();
         });
         Mediator.Subscribe<GlamourerChangedMessage>(this, (msg) =>
@@ -110,7 +110,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
             if (_isZoning) return;
             if (!string.Equals(msg.NewHonorificTitle, _playerData.HonorificData, StringComparison.Ordinal))
             {
-                Logger.LogDebug("Received Honorific change, updating player");
+                Logger.Debug("Received Honorific change, updating player");
                 HonorificChanged();
             }
         });
@@ -120,7 +120,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
             var changedType = _playerRelatedObjects.FirstOrDefault(f => f.Value.Address == msg.Address);
             if (!default(KeyValuePair<ObjectKind, GameObjectHandler>).Equals(changedType) && changedType.Key == ObjectKind.Player)
             {
-                Logger.LogDebug("Received Moodles change, updating player");
+                Logger.Debug("Received Moodles change, updating player");
                 MoodlesChanged();
             }
         });
@@ -129,13 +129,13 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
             if (_isZoning) return;
             if (!string.Equals(msg.PetNicknamesData, _playerData.PetNamesData, StringComparison.Ordinal))
             {
-                Logger.LogDebug("Received Pet Nicknames change, updating player");
+                Logger.Debug("Received Pet Nicknames change, updating player");
                 PetNicknamesChanged();
             }
         });
         Mediator.Subscribe<PenumbraModSettingChangedMessage>(this, (msg) =>
         {
-            Logger.LogDebug("Received Penumbra Mod settings change, updating player");
+            Logger.Debug("Received Penumbra Mod settings change, updating player");
             _ = AddPlayerCacheToCreate();
         });
 
@@ -244,13 +244,13 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
                 }
                 finally
                 {
-                    Logger.LogDebug("Cache Creation complete");
+                    Logger.Debug("Cache Creation complete");
                 }
             }, _cts.Token);
         }
         else if (_cachesToCreate.Any())
         {
-            Logger.LogDebug("Cache Creation stored until previous creation finished");
+            Logger.Debug("Cache Creation stored until previous creation finished");
         }
     }
 }

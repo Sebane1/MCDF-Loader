@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
@@ -18,11 +19,11 @@ public sealed class IpcCallerCustomize : IIpcCaller
     private readonly ICallGateSubscriber<ushort, int> _customizePlusRevertCharacter;
     private readonly ICallGateSubscriber<ushort, string, (int, Guid?)> _customizePlusSetBodyScaleToCharacter;
     private readonly ICallGateSubscriber<Guid, int> _customizePlusDeleteByUniqueId;
-    private readonly ILogger<IpcCallerCustomize> _Logger;
+    private readonly IPluginLog _Logger;
     private DalamudUtilService _dalamudUtil;
     private McdfMediator _mareMediator;
 
-    public IpcCallerCustomize(ILogger<IpcCallerCustomize> Logger, IDalamudPluginInterface dalamudPluginInterface,
+    public IpcCallerCustomize(IPluginLog Logger, IDalamudPluginInterface dalamudPluginInterface,
         DalamudUtilService dalamudUtil, McdfMediator mareMediator)
     {
         _customizePlusApiVersion = dalamudPluginInterface.GetIpcSubscriber<(int, int)>("CustomizePlus.General.GetApiVersion");
@@ -34,7 +35,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
         _customizePlusDeleteByUniqueId = dalamudPluginInterface.GetIpcSubscriber<Guid, int>("CustomizePlus.Profile.DeleteTemporaryProfileByUniqueId");
 
         _customizePlusOnScaleUpdate.Subscribe(OnCustomizePlusScaleChange);
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
@@ -51,7 +52,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
             var gameObj = _dalamudUtil.CreateGameObject(character);
             if (gameObj is ICharacter c)
             {
-                //_//Logger.LogTrace("CustomizePlus reverting for {chara}", c.Address.ToString("X"));
+                _Logger.Debug("CustomizePlus reverting for {chara}", c.Address.ToString("X"));
                 _customizePlusRevertCharacter!.InvokeFunc(c.ObjectIndex);
             }
         }).ConfigureAwait(false);
@@ -66,7 +67,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
             if (gameObj is ICharacter c)
             {
                 string decodedScale = Encoding.UTF8.GetString(Convert.FromBase64String(scale));
-                //_//Logger.LogTrace("CustomizePlus applying for {chara}", c.Address.ToString("X"));
+                _Logger.Debug("CustomizePlus applying for {chara}", c.Address.ToString("X"));
                 if (scale.IsNullOrEmpty())
                 {
                     _customizePlusRevertCharacter!.InvokeFunc(c.ObjectIndex);
@@ -102,7 +103,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
             if (gameObj is ICharacter c)
             {
                 var res = _customizePlusGetActiveProfile.InvokeFunc(c.ObjectIndex);
-                //_//Logger.LogTrace("CustomizePlus GetActiveProfile returned {err}", res.Item1);
+                _Logger.Debug("CustomizePlus GetActiveProfile returned {err}", res.Item1);
                 if (res.Item1 != 0 || res.Item2 == null) return string.Empty;
                 return _customizePlusGetProfileById.InvokeFunc(res.Item2.Value).Item2;
             }

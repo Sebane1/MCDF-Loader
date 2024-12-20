@@ -17,7 +17,7 @@ public class NotificationService : DisposableMediatorSubscriberBase, IHostedServ
     private readonly IChatGui _chatGui;
     private readonly MareConfigService _configurationService;
 
-    public NotificationService(ILogger<NotificationService> logger, McdfMediator mediator,
+    public NotificationService(IPluginLog logger, McdfMediator mediator,
         DalamudUtilService dalamudUtilService,
         INotificationManager notificationManager,
         IChatGui chatGui, MareConfigService configurationService) : base(logger, mediator)
@@ -77,7 +77,7 @@ public class NotificationService : DisposableMediatorSubscriberBase, IHostedServ
 
     private void ShowNotification(NotificationMessage msg)
     {
-        Logger.LogInformation("{msg}", msg.ToString());
+        Logger.Information("{msg}", msg.ToString());
 
         if (!_dalamudUtilService.IsLoggedIn) return;
 

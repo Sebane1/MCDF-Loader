@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
 using Microsoft.Extensions.Logging;
@@ -14,14 +15,14 @@ public sealed class IpcCallerMoodles : IIpcCaller
     private readonly ICallGateSubscriber<nint, string> _moodlesGetStatus;
     private readonly ICallGateSubscriber<nint, string, object> _moodlesSetStatus;
     private readonly ICallGateSubscriber<nint, object> _moodlesRevertStatus;
-    private readonly ILogger<IpcCallerMoodles> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly McdfMediator _mareMediator;
 
-    public IpcCallerMoodles(ILogger<IpcCallerMoodles> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerMoodles(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
@@ -71,7 +72,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not Get Moodles Status");
+            _Logger.Warning(e, "Could not Get Moodles Status");
             return null;
         }
     }
@@ -85,7 +86,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not Set Moodles Status");
+            _Logger.Warning(e, "Could not Set Moodles Status");
         }
     }
 
@@ -98,7 +99,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not Set Moodles Status");
+            _Logger.Warning(e, "Could not Set Moodles Status");
         }
     }
 }

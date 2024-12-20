@@ -17,13 +17,13 @@ public class PlayerDataFactory
     private readonly DalamudUtilService _dalamudUtil;
     private readonly FileCacheManager _fileCacheManager;
     private readonly IpcManager _ipcManager;
-    private readonly ILogger<PlayerDataFactory> _logger;
+    private readonly IPluginLog<PlayerDataFactory> _logger;
     private readonly PerformanceCollectorService _performanceCollector;
     private readonly XivDataAnalyzer _modelAnalyzer;
     private readonly McdfMediator _mareMediator;
     private readonly TransientResourceManager _transientResourceManager;
 
-    public PlayerDataFactory(ILogger<PlayerDataFactory> logger, DalamudUtilService dalamudUtil, IpcManager ipcManager,
+    public PlayerDataFactory(IPluginLog<PlayerDataFactory> logger, DalamudUtilService dalamudUtil, IpcManager ipcManager,
         TransientResourceManager transientResourceManager, FileCacheManager fileReplacementFactory,
         PerformanceCollectorService performanceCollector, XivDataAnalyzer modelAnalyzer, McdfMediator mareMediator)
     {
@@ -35,7 +35,7 @@ public class PlayerDataFactory
         _performanceCollector = performanceCollector;
         _modelAnalyzer = modelAnalyzer;
         _mareMediator = mareMediator;
-        _logger.LogTrace("Creating {this}", nameof(PlayerDataFactory));
+        _logger.Debug("Creating {this}", nameof(PlayerDataFactory));
     }
 
     public async Task BuildCharacterData(CharacterData previousData, GameObjectHandler playerRelatedObject, CancellationToken token)
@@ -58,17 +58,17 @@ public class PlayerDataFactory
             catch
             {
                 pointerIsZero = true;
-                _logger.LogDebug("NullRef for {object}", playerRelatedObject);
+                _logger.Debug("NullRef for {object}", playerRelatedObject);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "Could not create data for {object}", playerRelatedObject);
+            _logger.Warning(ex, "Could not create data for {object}", playerRelatedObject);
         }
 
         if (pointerIsZero)
         {
-            _logger.LogTrace("Pointer was zero for {objectKind}", playerRelatedObject.ObjectKind);
+            _logger.Debug("Pointer was zero for {objectKind}", playerRelatedObject.ObjectKind);
             previousData.FileReplacements.Remove(playerRelatedObject.ObjectKind);
             previousData.GlamourerString.Remove(playerRelatedObject.ObjectKind);
             previousData.CustomizePlusScale.Remove(playerRelatedObject.ObjectKind);
@@ -89,12 +89,12 @@ public class PlayerDataFactory
         }
         catch (OperationCanceledException)
         {
-            _logger.LogDebug("Cancelled creating Character data for {object}", playerRelatedObject);
+            _logger.Debug("Cancelled creating Character data for {object}", playerRelatedObject);
             throw;
         }
         catch (Exception e)
         {
-            _logger.LogWarning(e, "Failed to create {object} data", playerRelatedObject);
+            _logger.Warning(e, "Failed to create {object} data", playerRelatedObject);
         }
 
         previousData.FileReplacements = previousFileReplacements;
@@ -116,7 +116,7 @@ public class PlayerDataFactory
     {
         var objectKind = playerRelatedObject.ObjectKind;
 
-        _logger.LogDebug("Building character data for {obj}", playerRelatedObject);
+        _logger.Debug("Building character data for {obj}", playerRelatedObject);
 
         if (!previousData.FileReplacements.TryGetValue(objectKind, out HashSet<FileReplacement>? value))
         {
@@ -134,7 +134,7 @@ public class PlayerDataFactory
         int totalWaitTime = 10000;
         while (!await _dalamudUtil.IsObjectPresentAsync(await _dalamudUtil.CreateGameObjectAsync(playerRelatedObject.Address).ConfigureAwait(false)).ConfigureAwait(false) && totalWaitTime > 0)
         {
-            _logger.LogTrace("Character is null but it shouldn't be, waiting");
+            _logger.Debug("Character is null but it shouldn't be, waiting");
             await Task.Delay(50, token).ConfigureAwait(false);
             totalWaitTime -= 50;
         }
@@ -156,10 +156,10 @@ public class PlayerDataFactory
                 .Where(p => p.HasFileReplacement).ToHashSet();
         previousData.FileReplacements[objectKind].RemoveWhere(c => c.GamePaths.Any(g => !CacheMonitor.AllowedFileExtensions.Any(e => g.EndsWith(e, StringComparison.OrdinalIgnoreCase))));
 
-        _logger.LogDebug("== Static Replacements ==");
+        _logger.Debug("== Static Replacements ==");
         foreach (var replacement in previousData.FileReplacements[objectKind].Where(i => i.HasFileReplacement).OrderBy(i => i.GamePaths.First(), StringComparer.OrdinalIgnoreCase))
         {
-            _logger.LogDebug("=> {repl}", replacement);
+            _logger.Debug("=> {repl}", replacement);
         }
 
         // if it's pet then it's summoner, if it's summoner we actually want to keep all filereplacements alive at all times
@@ -168,12 +168,12 @@ public class PlayerDataFactory
         {
             foreach (var item in previousData.FileReplacements[objectKind].Where(i => i.HasFileReplacement).SelectMany(p => p.GamePaths))
             {
-                _logger.LogDebug("Persisting {item}", item);
+                _logger.Debug("Persisting {item}", item);
                 _transientResourceManager.AddSemiTransientResource(objectKind, item);
             }
         }
 
-        _logger.LogDebug("Handling transient update for {obj}", playerRelatedObject);
+        _logger.Debug("Handling transient update for {obj}", playerRelatedObject);
 
         // remove all potentially gathered paths from the transient resource manager that are resolved through static resolving
         _transientResourceManager.ClearTransientPaths(objectKind, previousData.FileReplacements[objectKind].SelectMany(c => c.GamePaths).ToList());
@@ -182,10 +182,10 @@ public class PlayerDataFactory
         var transientPaths = ManageSemiTransientData(objectKind);
         var resolvedTransientPaths = await GetFileReplacementsFromPaths(transientPaths, new HashSet<string>(StringComparer.Ordinal)).ConfigureAwait(false);
 
-        _logger.LogDebug("== Transient Replacements ==");
+        _logger.Debug("== Transient Replacements ==");
         foreach (var replacement in resolvedTransientPaths.Select(c => new FileReplacement([.. c.Value], c.Key)).OrderBy(f => f.ResolvedPath, StringComparer.Ordinal))
         {
-            _logger.LogDebug("=> {repl}", replacement);
+            _logger.Debug("=> {repl}", replacement);
             previousData.FileReplacements[objectKind].Add(replacement);
         }
 
@@ -204,27 +204,27 @@ public class PlayerDataFactory
         Task<string> getGlamourerData = _ipcManager.Glamourer.GetCharacterCustomizationAsync(playerRelatedObject.Address);
         Task<string?> getCustomizeData = _ipcManager.CustomizePlus.GetScaleAsync(playerRelatedObject.Address);
         previousData.GlamourerString[playerRelatedObject.ObjectKind] = await getGlamourerData.ConfigureAwait(false);
-        _logger.LogDebug("Glamourer is now: {data}", previousData.GlamourerString[playerRelatedObject.ObjectKind]);
+        _logger.Debug("Glamourer is now: {data}", previousData.GlamourerString[playerRelatedObject.ObjectKind]);
         var customizeScale = await getCustomizeData.ConfigureAwait(false);
         previousData.CustomizePlusScale[playerRelatedObject.ObjectKind] = customizeScale ?? string.Empty;
-        _logger.LogDebug("Customize is now: {data}", previousData.CustomizePlusScale[playerRelatedObject.ObjectKind]);
+        _logger.Debug("Customize is now: {data}", previousData.CustomizePlusScale[playerRelatedObject.ObjectKind]);
         previousData.HonorificData = _ipcManager.Honorific.GetTitle();
-        _logger.LogDebug("Honorific is now: {data}", previousData.HonorificData);
+        _logger.Debug("Honorific is now: {data}", previousData.HonorificData);
         previousData.HeelsData = await getHeelsOffset.ConfigureAwait(false);
-        _logger.LogDebug("Heels is now: {heels}", previousData.HeelsData);
+        _logger.Debug("Heels is now: {heels}", previousData.HeelsData);
         if (objectKind == ObjectKind.Player)
         {
             previousData.MoodlesData = await _ipcManager.Moodles.GetStatusAsync(playerRelatedObject.Address).ConfigureAwait(false) ?? string.Empty;
-            _logger.LogDebug("Moodles is now: {moodles}", previousData.MoodlesData);
+            _logger.Debug("Moodles is now: {moodles}", previousData.MoodlesData);
 
             previousData.PetNamesData = _ipcManager.PetNames.GetLocalNames();
-            _logger.LogDebug("Pet Nicknames is now: {petnames}", previousData.PetNamesData);
+            _logger.Debug("Pet Nicknames is now: {petnames}", previousData.PetNamesData);
         }
 
         if (previousData.FileReplacements.TryGetValue(objectKind, out HashSet<FileReplacement>? fileReplacements))
         {
             var toCompute = fileReplacements.Where(f => !f.IsFileSwap).ToArray();
-            _logger.LogDebug("Getting Hashes for {amount} Files", toCompute.Length);
+            _logger.Debug("Getting Hashes for {amount} Files", toCompute.Length);
             var computedPaths = _fileCacheManager.GetFileCachesByPaths(toCompute.Select(c => c.ResolvedPath).ToArray());
             foreach (var file in toCompute)
             {
@@ -233,7 +233,7 @@ public class PlayerDataFactory
             var removed = fileReplacements.RemoveWhere(f => !f.IsFileSwap && string.IsNullOrEmpty(f.Hash));
             if (removed > 0)
             {
-                _logger.LogDebug("Removed {amount} of invalid files", removed);
+                _logger.Debug("Removed {amount} of invalid files", removed);
             }
         }
 
@@ -245,11 +245,11 @@ public class PlayerDataFactory
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Failed to verify player animations, continuing without further verification");
+                _logger.Warning(e, "Failed to verify player animations, continuing without further verification");
             }
         }
 
-        _logger.LogInformation("Building character data for {obj} took {time}ms", objectKind, TimeSpan.FromTicks(DateTime.UtcNow.Ticks - start.Ticks).TotalMilliseconds);
+        _logger.Information("Building character data for {obj} took {time}ms", objectKind, TimeSpan.FromTicks(DateTime.UtcNow.Ticks - start.Ticks).TotalMilliseconds);
 
         return previousData;
     }
@@ -260,7 +260,7 @@ public class PlayerDataFactory
 
         foreach (var kvp in boneIndices)
         {
-            _logger.LogDebug("Found {skellyname} ({idx} bone indices) on player: {bones}", kvp.Key, kvp.Value.Any() ? kvp.Value.Max() : 0, string.Join(',', kvp.Value));
+            _logger.Debug("Found {skellyname} ({idx} bone indices) on player: {bones}", kvp.Key, kvp.Value.Any() ? kvp.Value.Max() : 0, string.Join(',', kvp.Value));
         }
 
         if (boneIndices.All(u => u.Value.Count == 0)) return;
@@ -275,17 +275,17 @@ public class PlayerDataFactory
                 // 105 is the maximum vanilla skellington spoopy bone index
                 if (skeletonIndices.All(k => k.Value.Max() <= 105))
                 {
-                    _logger.LogTrace("All indices of {path} are <= 105, ignoring", file.ResolvedPath);
+                    _logger.Debug("All indices of {path} are <= 105, ignoring", file.ResolvedPath);
                     continue;
                 }
 
-                _logger.LogDebug("Verifying bone indices for {path}, found {x} skeletons", file.ResolvedPath, skeletonIndices.Count);
+                _logger.Debug("Verifying bone indices for {path}, found {x} skeletons", file.ResolvedPath, skeletonIndices.Count);
 
                 foreach (var boneCount in skeletonIndices.Select(k => k).ToList())
                 {
                     if (boneCount.Value.Max() > boneIndices.SelectMany(b => b.Value).Max())
                     {
-                        _logger.LogWarning("Found more bone indices on the animation {path} skeleton {skl} (max indice {idx}) than on any player related skeleton (max indice {idx2})",
+                        _logger.Warning("Found more bone indices on the animation {path} skeleton {skl} (max indice {idx}) than on any player related skeleton (max indice {idx2})",
                             file.ResolvedPath, boneCount.Key, boneCount.Value.Max(), boneIndices.SelectMany(b => b.Value).Max());
                         validationFailed = true;
                         break;
@@ -296,7 +296,7 @@ public class PlayerDataFactory
             if (validationFailed)
             {
                 noValidationFailed++;
-                _logger.LogDebug("Removing {file} from sent file replacements and transient data", file.ResolvedPath);
+                _logger.Debug("Removing {file} from sent file replacements and transient data", file.ResolvedPath);
                 previousData.FileReplacements[objectKind].Remove(file);
                 foreach (var gamePath in file.GamePaths)
                 {

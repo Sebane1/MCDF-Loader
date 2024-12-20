@@ -27,7 +27,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly IDataManager _gameData;
     private readonly IFramework _framework;
     private readonly IGameGui _gameGui;
-    private readonly ILogger<DalamudUtilService> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly IObjectTable _objectTable;
     private uint? _classJobId = 0;
     private DateTime _delayedFrameworkUpdateCheck = DateTime.UtcNow;
@@ -38,11 +38,11 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly List<string> _notUpdatedCharas = [];
     private bool _sentBetweenAreas = false;
 
-    public DalamudUtilService(ILogger<DalamudUtilService> Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
+    public DalamudUtilService(IPluginLog Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
         IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager, McdfMediator mediator, PerformanceCollectorService performanceCollector)
     {
         _performanceCollector = performanceCollector;
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _clientState = clientState;
         _objectTable = objectTable;
         _framework = framework;
@@ -252,7 +252,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         //        await _framework.RunOnFrameworkThread(act).ContinueWith((_) => Task.CompletedTask).ConfigureAwait(false);
         //        while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
         //        {
-        //            //_//Logger.LogTrace("Still on framework");
+        //            _Logger.Debug("Still on framework");
         //            await Task.Delay(1).ConfigureAwait(false);
         //        }
         //    }
@@ -269,7 +269,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
             var result = await _framework.RunOnFrameworkThread(func).ContinueWith((task) => task.Result).ConfigureAwait(false);
             while (_framework.IsInFrameworkUpdateThread) // yield the thread again, should technically never be triggered
             {
-                //_//Logger.LogTrace("Still on framework");
+                _Logger.Debug("Still on framework");
                 await Task.Delay(1).ConfigureAwait(false);
             }
             return result;
@@ -280,31 +280,31 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        //_//Logger.LogInformation("Starting DalamudUtilService");
+        _Logger.Information("Starting DalamudUtilService");
         _framework.Update += FrameworkOnUpdate;
         if (IsLoggedIn)
         {
             _classJobId = _clientState.LocalPlayer!.ClassJob.RowId;
         }
 
-        //_//Logger.LogInformation("Started DalamudUtilService");
+        _Logger.Information("Started DalamudUtilService");
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        //_//Logger.LogTrace("Stopping {type}", GetType());
+        _Logger.Debug("Stopping {type}", GetType());
 
         Mediator.UnsubscribeAll(this);
         _framework.Update -= FrameworkOnUpdate;
         return Task.CompletedTask;
     }
 
-    public async Task WaitWhileCharacterIsDrawing(ILogger Logger, GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
+    public async Task WaitWhileCharacterIsDrawing(IPluginLog Logger, GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
     {
         if (!_clientState.IsLoggedIn) return;
 
-        //Logger.LogTrace("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
+        Logger.Debug("[{redrawId}] Starting wait for {handler} to draw", redrawId, handler);
 
         const int tick = 250;
         int curWaitTime = 0;
@@ -314,20 +314,20 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                    && curWaitTime < timeOut
                    && await handler.IsBeingDrawnRunOnFrameworkAsync().ConfigureAwait(false)) // 0b100000000000 is "still rendering" or something
             {
-                //Logger.LogTrace("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
+                Logger.Debug("[{redrawId}] Waiting for {handler} to finish drawing", redrawId, handler);
                 curWaitTime += tick;
                 await Task.Delay(tick).ConfigureAwait(true);
             }
 
-            //Logger.LogTrace("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
+            Logger.Debug("[{redrawId}] Finished drawing after {curWaitTime}ms", redrawId, curWaitTime);
         }
         catch (NullReferenceException ex)
         {
-            //Logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
         catch (AccessViolationException ex)
         {
-            //Logger.LogWarning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
+            Logger.Warning(ex, "Error accessing {handler}, object does not exist anymore?", handler);
         }
     }
 
@@ -337,10 +337,10 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         var obj = (GameObject*)characterAddress;
         const int tick = 250;
         int curWaitTime = 0;
-        //_//Logger.LogTrace("RenderFlags: {flags}", obj->RenderFlags.ToString("X"));
+        _Logger.Debug("RenderFlags: {flags}", obj->RenderFlags.ToString("X"));
         while (obj->RenderFlags != 0x00 && curWaitTime < timeOut)
         {
-            //_//Logger.LogTrace($"Waiting for gpose actor to finish drawing");
+            _Logger.Debug($"Waiting for gpose actor to finish drawing");
             curWaitTime += tick;
             Thread.Sleep(tick);
         }
@@ -408,7 +408,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
         if (isDrawingChanged)
         {
-            //_//Logger.LogTrace("Global draw block: START => {name} ({reason})", characterName, _lastGlobalBlockReason);
+            _Logger.Debug("Global draw block: START => {name} ({reason})", characterName, _lastGlobalBlockReason);
         }
 
         IsAnythingDrawing |= isDrawing;
@@ -456,34 +456,34 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
             if (!IsAnythingDrawing && !string.IsNullOrEmpty(_lastGlobalBlockPlayer))
             {
-                //_//Logger.LogTrace("Global draw block: END => {name}", _lastGlobalBlockPlayer);
+                _Logger.Debug("Global draw block: END => {name}", _lastGlobalBlockPlayer);
                 _lastGlobalBlockPlayer = string.Empty;
                 _lastGlobalBlockReason = string.Empty;
             }
 
             if (GposeTarget != null && !IsInGpose)
             {
-                //_//Logger.LogDebug("Gpose start");
+                _Logger.Debug("Gpose start");
                 IsInGpose = true;
                 Mediator.Publish(new GposeStartMessage());
             }
             else if (GposeTarget == null && IsInGpose)
             {
-                //_//Logger.LogDebug("Gpose end");
+                _Logger.Debug("Gpose end");
                 IsInGpose = false;
                 Mediator.Publish(new GposeEndMessage());
             }
 
             if (_condition[ConditionFlag.WatchingCutscene] && !IsInCutscene)
             {
-                //_//Logger.LogDebug("Cutscene start");
+                _Logger.Debug("Cutscene start");
                 IsInCutscene = true;
                 Mediator.Publish(new CutsceneStartMessage());
                 Mediator.Publish(new HaltScanMessage(nameof(IsInCutscene)));
             }
             else if (!_condition[ConditionFlag.WatchingCutscene] && IsInCutscene)
             {
-                //_//Logger.LogDebug("Cutscene end");
+                _Logger.Debug("Cutscene end");
                 IsInCutscene = false;
                 Mediator.Publish(new CutsceneEndMessage());
                 Mediator.Publish(new ResumeScanMessage(nameof(IsInCutscene)));
@@ -503,7 +503,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                     _lastZone = zone;
                     if (!_sentBetweenAreas)
                     {
-                        //_//Logger.LogDebug("Zone switch/Gpose start");
+                        _Logger.Debug("Zone switch/Gpose start");
                         _sentBetweenAreas = true;
                         Mediator.Publish(new ZoneSwitchStartMessage());
                         Mediator.Publish(new HaltScanMessage(nameof(ConditionFlag.BetweenAreas)));
@@ -515,7 +515,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
             if (_sentBetweenAreas)
             {
-                //_//Logger.LogDebug("Zone switch/Gpose end");
+                _Logger.Debug("Zone switch/Gpose end");
                 _sentBetweenAreas = false;
                 Mediator.Publish(new ZoneSwitchEndMessage());
                 Mediator.Publish(new ResumeScanMessage(nameof(ConditionFlag.BetweenAreas)));
@@ -537,14 +537,14 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
             if (localPlayer != null && !IsLoggedIn)
             {
-                //_//Logger.LogDebug("Logged in");
+                _Logger.Debug("Logged in");
                 IsLoggedIn = true;
                 _lastZone = _clientState.TerritoryType;
                 Mediator.Publish(new DalamudLoginMessage());
             }
             else if (localPlayer == null && IsLoggedIn)
             {
-                //_//Logger.LogDebug("Logged out");
+                _Logger.Debug("Logged out");
                 IsLoggedIn = false;
                 Mediator.Publish(new DalamudLogoutMessage());
             }

@@ -11,12 +11,12 @@ namespace MareSynchronos.Services;
 public sealed class PerformanceCollectorService : IHostedService
 {
     private const string _counterSplit = "=>";
-    private readonly ILogger<PerformanceCollectorService> _logger;
+    private readonly IPluginLog<PerformanceCollectorService> _logger;
     private readonly MareConfigService _mareConfigService;
     public ConcurrentDictionary<string, RollingList<(TimeOnly, long)>> PerformanceCounters { get; } = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource _periodicLogPruneTaskCts = new();
 
-    public PerformanceCollectorService(ILogger<PerformanceCollectorService> logger, MareConfigService mareConfigService)
+    public PerformanceCollectorService(IPluginLog<PerformanceCollectorService> logger, MareConfigService mareConfigService)
     {
         _logger = logger;
         _mareConfigService = mareConfigService;
@@ -43,7 +43,7 @@ public sealed class PerformanceCollectorService : IHostedService
             var elapsed = DateTime.UtcNow.Ticks - dt;
 #if DEBUG
             if (TimeSpan.FromTicks(elapsed) > TimeSpan.FromMilliseconds(10))
-                _logger.LogWarning(">10ms spike on {counterName}: {time}", cn, TimeSpan.FromTicks(elapsed));
+                _logger.Warning(">10ms spike on {counterName}: {time}", cn, TimeSpan.FromTicks(elapsed));
 #endif
             list.Add((TimeOnly.FromDateTime(DateTime.Now), elapsed));
         }
@@ -70,7 +70,7 @@ public sealed class PerformanceCollectorService : IHostedService
             var elapsed = DateTime.UtcNow.Ticks - dt;
 #if DEBUG
             if (TimeSpan.FromTicks(elapsed) > TimeSpan.FromMilliseconds(10))
-                _logger.LogWarning(">10ms spike on {counterName}: {time}", cn, TimeSpan.FromTicks(elapsed));
+                _logger.Warning(">10ms spike on {counterName}: {time}", cn, TimeSpan.FromTicks(elapsed));
 #endif
             list.Add(new(TimeOnly.FromDateTime(DateTime.Now), elapsed));
         }
@@ -78,9 +78,9 @@ public sealed class PerformanceCollectorService : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting PerformanceCollectorService");
+        _logger.Information("Starting PerformanceCollectorService");
         _ = Task.Run(PeriodicLogPrune, _periodicLogPruneTaskCts.Token);
-        _logger.LogInformation("Started PerformanceCollectorService");
+        _logger.Information("Started PerformanceCollectorService");
         return Task.CompletedTask;
     }
 
@@ -95,7 +95,7 @@ public sealed class PerformanceCollectorService : IHostedService
     {
         if (!_mareConfigService.Current.LogPerformance)
         {
-            _logger.LogWarning("Performance counters are disabled");
+            _logger.Warning("Performance counters are disabled");
         }
 
         StringBuilder sb = new();
@@ -154,7 +154,7 @@ public sealed class PerformanceCollectorService : IHostedService
 
         DrawSeparator(sb, longestCounterName);
 
-        _logger.LogInformation("{perf}", sb.ToString());
+        _logger.Information("{perf}", sb.ToString());
     }
 
     private static void DrawSeparator(StringBuilder sb, int longestCounterName)
@@ -186,12 +186,12 @@ public sealed class PerformanceCollectorService : IHostedService
                     var last = entries.Value.ToList().Last();
                     if (last.Item1.AddMinutes(10) < TimeOnly.FromDateTime(DateTime.Now) && !PerformanceCounters.TryRemove(entries.Key, out _))
                     {
-                        _logger.LogDebug("Could not remove performance counter {counter}", entries.Key);
+                        _logger.Debug("Could not remove performance counter {counter}", entries.Key);
                     }
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, "Error removing performance counter {counter}", entries.Key);
+                    _logger.Warning(e, "Error removing performance counter {counter}", entries.Key);
                 }
             }
         }

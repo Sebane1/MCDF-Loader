@@ -1,11 +1,12 @@
-﻿using MareSynchronos.Services.Mediator;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
 namespace MareSynchronos.Interop.Ipc;
 
 public sealed partial class IpcManager : DisposableMediatorSubscriberBase
 {
-    public IpcManager(ILogger<IpcManager> Logger, McdfMediator mediator,
+    public IpcManager(IPluginLog Logger, McdfMediator mediator,
         IpcCallerPenumbra penumbraIpc, IpcCallerGlamourer glamourerIpc, IpcCallerCustomize customizeIpc, IpcCallerHeels heelsIpc,
         IpcCallerHonorific honorificIpc, IpcCallerMoodles moodlesIpc, IpcCallerPetNames ipcCallerPetNames) : base(Logger, mediator)
     {
@@ -30,7 +31,7 @@ public sealed partial class IpcManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            //Logger.LogWarning(ex, "Failed to check for some IPC, plugin not installed?");
+            Logger.Warning(ex, "Failed to check for some IPC, plugin not installed?");
         }
     }
 

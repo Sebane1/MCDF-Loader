@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
 using Microsoft.Extensions.Logging;
@@ -9,7 +10,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed class IpcCallerPetNames : IIpcCaller
 {
-    private readonly ILogger<IpcCallerPetNames> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly McdfMediator _mareMediator;
 
@@ -23,10 +24,10 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _setPlayerData;
     private readonly ICallGateSubscriber<ushort, object> _clearPlayerData;
 
-    public IpcCallerPetNames(ILogger<IpcCallerPetNames> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerPetNames(IPluginLog Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _dalamudUtil = dalamudUtil;
         _mareMediator = mareMediator;
 
@@ -87,7 +88,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
         } 
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not obtain Pet Nicknames data");
+            _Logger.Warning(e, "Could not obtain Pet Nicknames data");
         }
 
         return string.Empty;
@@ -97,7 +98,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
     {
         if (!APIAvailable) return;
 
-        //_//Logger.LogTrace("Applying Pet Nicknames data to {chara}", character.ToString("X"));
+        _Logger.Debug("Applying Pet Nicknames data to {chara}", character.ToString("X"));
 
         try
         {
@@ -119,7 +120,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not apply Pet Nicknames data");
+            _Logger.Warning(e, "Could not apply Pet Nicknames data");
         }
     }
 
@@ -133,14 +134,14 @@ public sealed class IpcCallerPetNames : IIpcCaller
                 var gameObj = _dalamudUtil.CreateGameObject(characterPointer);
                 if (gameObj is IPlayerCharacter pc)
                 {
-                    //_//Logger.LogTrace("Pet Nicknames removing for {addr}", pc.Address.ToString("X"));
+                    _Logger.Debug("Pet Nicknames removing for {addr}", pc.Address.ToString("X"));
                     _clearPlayerData.InvokeAction(pc.ObjectIndex);
                 }
             }).ConfigureAwait(false);
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not clear Pet Nicknames data");
+            _Logger.Warning(e, "Could not clear Pet Nicknames data");
         }
     }
 

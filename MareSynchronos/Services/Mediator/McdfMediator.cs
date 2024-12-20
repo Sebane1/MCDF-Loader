@@ -11,16 +11,16 @@ public sealed class McdfMediator : IHostedService
 {
     private readonly object _addRemoveLock = new();
     private readonly ConcurrentDictionary<object, DateTime> _lastErrorTime = [];
-    private readonly ILogger<McdfMediator> _Logger;
+    private readonly IPluginLog<McdfMediator> _Logger;
     private readonly CancellationTokenSource _loopCts = new();
     private readonly ConcurrentQueue<MessageBase> _messageQueue = new();
     private readonly MareConfigService _mareConfigService;
     private readonly ConcurrentDictionary<Type, HashSet<SubscriberAction>> _subscriberDict = [];
     private bool _processQueue = false;
     private readonly ConcurrentDictionary<Type, MethodInfo?> _genericExecuteMethods = new();
-    public McdfMediator(ILogger<McdfMediator> Logger, MareConfigService mareConfigService)
+    public McdfMediator(IPluginLog<McdfMediator> Logger, MareConfigService mareConfigService)
     {
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _mareConfigService = mareConfigService;
     }
 
@@ -29,7 +29,7 @@ public sealed class McdfMediator : IHostedService
         foreach (var subscriber in _subscriberDict.SelectMany(c => c.Value.Select(v => v.Subscriber))
             .DistinctBy(p => p).OrderBy(p => p.GetType().FullName, StringComparer.Ordinal).ToList())
         {
-            //_//Logger.LogInformation("Subscriber {type}: {sub}", subscriber.GetType().Name, subscriber.ToString());
+            _Logger.Information("Subscriber {type}: {sub}", subscriber.GetType().Name, subscriber.ToString());
             StringBuilder sb = new();
             sb.Append("=> ");
             foreach (var item in _subscriberDict.Where(item => item.Value.Any(v => v.Subscriber == subscriber)).ToList())
@@ -38,8 +38,8 @@ public sealed class McdfMediator : IHostedService
             }
 
             //if (!string.Equals(sb.ToString(), "=> ", StringComparison.Ordinal))
-            //    //_//Logger.LogInformation("{sb}", sb.ToString());
-            ////_//Logger.LogInformation("---");
+            //    _Logger.Information("{sb}", sb.ToString());
+            //_Logger.Information("---");
         }
     }
 
@@ -57,7 +57,7 @@ public sealed class McdfMediator : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        //_//Logger.LogInformation("Starting MareMediator");
+        _Logger.Information("Starting MareMediator");
 
         _ = Task.Run(async () =>
         {
@@ -81,7 +81,7 @@ public sealed class McdfMediator : IHostedService
             }
         });
 
-        //_//Logger.LogInformation("Started MareMediator");
+        _Logger.Information("Started MareMediator");
 
         return Task.CompletedTask;
     }
@@ -104,7 +104,7 @@ public sealed class McdfMediator : IHostedService
                 throw new InvalidOperationException("Already subscribed");
             }
 
-            //_//Logger.LogDebug("Subscriber added for message {message}: {sub}", typeof(T).Name, subscriber.GetType().Name);
+            _Logger.Debug("Subscriber added for message {message}: {sub}", typeof(T).Name, subscriber.GetType().Name);
         }
     }
 
@@ -128,7 +128,7 @@ public sealed class McdfMediator : IHostedService
                 int unSubbed = _subscriberDict[kvp]?.RemoveWhere(p => p.Subscriber == subscriber) ?? 0;
                 if (unSubbed > 0)
                 {
-                    //_//Logger.LogDebug("{sub} unsubscribed from {msg}", subscriber.GetType().Name, kvp.Name);
+                    _Logger.Debug("{sub} unsubscribed from {msg}", subscriber.GetType().Name, kvp.Name);
                 }
             }
         }
@@ -177,7 +177,7 @@ public sealed class McdfMediator : IHostedService
 
     public void StartQueueProcessing()
     {
-        //_//Logger.LogInformation("Starting Message Queue Processing");
+        _Logger.Information("Starting Message Queue Processing");
         _processQueue = true;
     }
 

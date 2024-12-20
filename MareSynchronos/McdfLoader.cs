@@ -1,4 +1,5 @@
-﻿using MareSynchronos.FileCache;
+﻿using Dalamud.Plugin.Services;
+using MareSynchronos.FileCache;
 using MareSynchronos.MareConfiguration;
 using MareSynchronos.PlayerData.Services;
 using MareSynchronos.Services;
@@ -18,7 +19,7 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
     private IServiceScope? _runtimeServiceScope;
     private Task? _launchTask = null;
 
-    public McdfLoader(ILogger<McdfLoader> Logger, MareConfigService mareConfigService,
+    public McdfLoader(IPluginLog Logger, MareConfigService mareConfigService,
         DalamudUtilService dalamudUtil,
         IServiceScopeFactory serviceScopeFactory, McdfMediator mediator) : base(Logger, mediator)
     {
@@ -30,7 +31,7 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
     public Task StartAsync(CancellationToken cancellationToken)
     {
         var version = Assembly.GetExecutingAssembly().GetName().Version!;
-        //Logger.LogInformation("Launching {name} {major}.{minor}.{build}", "Mare Synchronos", version.Major, version.Minor, version.Build);
+        Logger.Information("Launching {name} {major}.{minor}.{build}", "Mare Synchronos", version.Major, version.Minor, version.Build);
 
         Mediator.Subscribe<SwitchToMainUiMessage>(this, (msg) => { if (_launchTask == null || _launchTask.IsCompleted) _launchTask = Task.Run(WaitForPlayerAndLaunchCharacterManager); });
         Mediator.Subscribe<DalamudLoginMessage>(this, (_) => DalamudUtilOnLogIn());
@@ -47,20 +48,20 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
 
         DalamudUtilOnLogOut();
 
-        //Logger.LogDebug("Halting MarePlugin");
+        Logger.Debug("Halting MarePlugin");
 
         return Task.CompletedTask;
     }
 
     private void DalamudUtilOnLogIn()
     {
-        //Logger?.LogDebug("Client login");
+        Logger?.Debug("Client login");
         if (_launchTask == null || _launchTask.IsCompleted) _launchTask = Task.Run(WaitForPlayerAndLaunchCharacterManager);
     }
 
     private void DalamudUtilOnLogOut()
     {
-        //Logger?.LogDebug("Client logout");
+        Logger?.Debug("Client logout");
 
         _runtimeServiceScope?.Dispose();
     }
@@ -74,7 +75,7 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
 
         try
         {
-            //Logger?.LogDebug("Launching Managers");
+            Logger?.Debug("Launching Managers");
 
             _runtimeServiceScope?.Dispose();
             _runtimeServiceScope = _serviceScopeFactory.CreateScope();
@@ -93,7 +94,7 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
         }
         catch (Exception ex)
         {
-            //Logger?.LogCritical(ex, "Error during launch of managers");
+            Logger?.Error(ex, "Error during launch of managers");
         }
     }
 }

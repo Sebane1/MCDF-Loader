@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
 using Microsoft.Extensions.Logging;
@@ -17,14 +18,14 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _honorificLocalCharacterTitleChanged;
     private readonly ICallGateSubscriber<object> _honorificReady;
     private readonly ICallGateSubscriber<int, string, object> _honorificSetCharacterTitle;
-    private readonly ILogger<IpcCallerHonorific> _Logger;
+    private readonly IPluginLog  _Logger;
     private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
-    public IpcCallerHonorific(ILogger<IpcCallerHonorific> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+    public IpcCallerHonorific(IPluginLog  Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _honorificApiVersion = pi.GetIpcSubscriber<(uint, uint)>("Honorific.ApiVersion");
@@ -71,7 +72,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
             var gameObj = _dalamudUtil.CreateGameObject(character);
             if (gameObj is IPlayerCharacter c)
             {
-                //_//Logger.LogTrace("Honorific removing for {addr}", c.Address.ToString("X"));
+                _Logger.Debug("Honorific removing for {addr}", c.Address.ToString("X"));
                 _honorificClearCharacterTitle!.InvokeAction(c.ObjectIndex);
             }
         }).ConfigureAwait(false);
@@ -87,7 +88,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
     public async Task SetTitleAsync(IntPtr character, string honorificDataB64)
     {
         if (!APIAvailable) return;
-        //_//Logger.LogTrace("Applying Honorific data to {chara}", character.ToString("X"));
+        _Logger.Debug("Applying Honorific data to {chara}", character.ToString("X"));
         try
         {
             await _dalamudUtil.RunOnFrameworkThread(() =>
@@ -109,7 +110,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
         }
         catch (Exception e)
         {
-            //_//Logger.LogWarning(e, "Could not apply Honorific data");
+            _Logger.Warning(e, "Could not apply Honorific data");
         }
     }
 

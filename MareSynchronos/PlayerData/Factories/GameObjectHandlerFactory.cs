@@ -9,11 +9,11 @@ namespace MareSynchronos.PlayerData.Factories;
 public class GameObjectHandlerFactory
 {
     private readonly DalamudUtilService _dalamudUtilService;
-    private readonly ILoggerFactory _loggerFactory;
+    private readonly IPluginLogFactory _loggerFactory;
     private readonly McdfMediator _mareMediator;
     private readonly PerformanceCollectorService _performanceCollectorService;
 
-    public GameObjectHandlerFactory(ILoggerFactory loggerFactory, PerformanceCollectorService performanceCollectorService, McdfMediator mareMediator,
+    public GameObjectHandlerFactory(IPluginLogFactory loggerFactory, PerformanceCollectorService performanceCollectorService, McdfMediator mareMediator,
         DalamudUtilService dalamudUtilService)
     {
         _loggerFactory = loggerFactory;

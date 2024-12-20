@@ -1,10 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Dalamud.Plugin.Services;
+using Microsoft.Extensions.Logging;
 
 namespace MareSynchronos.Services.Mediator;
 
 public abstract class DisposableMediatorSubscriberBase : MediatorSubscriberBase, IDisposable
 {
-    protected DisposableMediatorSubscriberBase(ILogger Logger, McdfMediator mediator) : base(Logger, mediator)
+    protected DisposableMediatorSubscriberBase(IPluginLog Logger, McdfMediator mediator) : base(Logger, mediator)
     {
     }
 
@@ -16,7 +17,7 @@ public abstract class DisposableMediatorSubscriberBase : MediatorSubscriberBase,
 
     protected virtual void Dispose(bool disposing)
     {
-        //Logger.LogTrace("Disposing {type} ({this})", GetType().Name, this);
+        Logger.Debug("Disposing {type} ({this})", GetType().Name, this);
         UnsubscribeAll();
     }
 }

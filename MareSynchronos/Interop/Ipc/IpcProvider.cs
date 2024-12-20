@@ -1,6 +1,7 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using MareSynchronos.PlayerData.Export;
 using MareSynchronos.PlayerData.Handlers;
 using MareSynchronos.Services;
@@ -12,7 +13,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public class IpcProvider : IHostedService, IMediatorSubscriber
 {
-    private readonly ILogger<IpcProvider> _Logger;
+    private readonly IPluginLog _Logger;
     private readonly IDalamudPluginInterface _pi;
     private readonly MareCharaFileManager _mareCharaFileManager;
     private readonly DalamudUtilService _dalamudUtil;
@@ -23,7 +24,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public McdfMediator Mediator { get; init; }
 
-    public IpcProvider(ILogger<IpcProvider> Logger, IDalamudPluginInterface pi,
+    public IpcProvider(IPluginLog Logger, IDalamudPluginInterface pi,
         MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
@@ -91,7 +92,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         }
         catch (Exception e)
         {
-            _Logger.LogError(e, "Failure of IPC call");
+            _Logger.Error(e, "Failure of IPC call");
         }
         finally
         {

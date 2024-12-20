@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Plugin.Services;
 using MareSynchronos.PlayerData.Handlers;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
@@ -23,7 +24,7 @@ public class RedrawManager
         _dalamudUtil = dalamudUtil;
     }
 
-    public async Task PenumbraRedrawInternalAsync(ILogger Logger, GameObjectHandler handler, Guid applicationId, Action<ICharacter> action, CancellationToken token)
+    public async Task PenumbraRedrawInternalAsync(IPluginLog Logger, GameObjectHandler handler, Guid applicationId, Action<ICharacter> action, CancellationToken token)
     {
         _mareMediator.Publish(new PenumbraStartRedrawMessage(handler.Address));
 

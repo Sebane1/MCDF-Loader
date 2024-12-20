@@ -23,7 +23,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     private readonly CancellationTokenSource _periodicCalculationTokenSource = new();
     public static readonly IImmutableList<string> AllowedFileExtensions = [".mdl", ".tex", ".mtrl", ".tmb", ".pap", ".avfx", ".atex", ".sklb", ".eid", ".phyb", ".pbd", ".scd", ".skp", ".shpk"];
 
-    public CacheMonitor(ILogger<CacheMonitor> Logger, IpcManager ipcManager, MareConfigService configService,
+    public CacheMonitor(IPluginLog<CacheMonitor> Logger, IpcManager ipcManager, MareConfigService configService,
         FileCacheManager fileDbManager, McdfMediator mediator,DalamudUtilService dalamudUtil,
         FileCompactor fileCompactor, PerformanceCollectorService performanceCollector) : base(Logger, mediator)
     {
@@ -65,7 +65,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         var token = _periodicCalculationTokenSource.Token;
         _ = Task.Run(async () =>
         {
-            ////Logger.LogInformation("Starting Periodic Storage Directory Calculation Task");
+            //Logger.Information("Starting Periodic Storage Directory Calculation Task");
             var token = _periodicCalculationTokenSource.Token;
             while (!token.IsCancellationRequested)
             {
@@ -107,7 +107,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
     public void StopMonitoring()
     {
-        ////Logger.LogInformation("Stopping monitoring of Penumbra and Mare storage folders");
+        //Logger.Information("Stopping monitoring of Penumbra and Mare storage folders");
         MareWatcher?.Dispose();
         PenumbraWatcher?.Dispose();
         MareWatcher = null;
@@ -122,15 +122,15 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         if (string.IsNullOrEmpty(marePath) || !Directory.Exists(marePath))
         {
             MareWatcher = null;
-            ////Logger.LogWarning("Mare file path is not set, cannot start the FSW for Mare.");
+            //Logger.Warning("Mare file path is not set, cannot start the FSW for Mare.");
             return;
         }
 
         DriveInfo di = new(new DirectoryInfo(CachePath.CacheLocation).Root.FullName);
         StorageisNTFS = string.Equals("NTFS", di.DriveFormat, StringComparison.OrdinalIgnoreCase);
-        ////Logger.LogInformation("Mare Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
+        //Logger.Information("Mare Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
 
-        ////Logger.LogDebug("Initializing Mare FSW on {path}", marePath);
+        //Logger.Debug("Initializing Mare FSW on {path}", marePath);
         MareWatcher = new()
         {
             Path = marePath,
@@ -151,7 +151,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
     private void MareWatcher_FileChanged(object sender, FileSystemEventArgs e)
     {
-        ////Logger.LogTrace("Mare FSW: FileChanged: {change} => {path}", e.ChangeType, e.FullPath);
+        //Logger.Debug("Mare FSW: FileChanged: {change} => {path}", e.ChangeType, e.FullPath);
 
         if (!AllowedFileExtensions.Any(ext => e.FullPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase))) return;
 
@@ -169,11 +169,11 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         if (string.IsNullOrEmpty(penumbraPath))
         {
             PenumbraWatcher = null;
-            ////Logger.LogWarning("Penumbra is not connected or the path is not set, cannot start FSW for Penumbra.");
+            //Logger.Warning("Penumbra is not connected or the path is not set, cannot start FSW for Penumbra.");
             return;
         }
 
-        ////Logger.LogDebug("Initializing Penumbra FSW on {path}", penumbraPath);
+        //Logger.Debug("Initializing Penumbra FSW on {path}", penumbraPath);
         PenumbraWatcher = new()
         {
             Path = penumbraPath,
@@ -207,7 +207,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             _watcherChanges[e.FullPath] = new(e.ChangeType);
         }
 
-        ////Logger.LogTrace("FSW {event}: {path}", e.ChangeType, e.FullPath);
+        //Logger.Debug("FSW {event}: {path}", e.ChangeType, e.FullPath);
 
         _ = PenumbraWatcherExecution();
     }
@@ -226,7 +226,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
                     _watcherChanges.Remove(oldPath);
                     _watcherChanges[file] = new(WatcherChangeTypes.Renamed, oldPath);
-                    ////Logger.LogTrace("FSW Renamed: {path} -> {new}", oldPath, file);
+                    //Logger.Debug("FSW Renamed: {path} -> {new}", oldPath, file);
 
                 }
             }
@@ -241,7 +241,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
                 _watcherChanges[e.FullPath] = new(WatcherChangeTypes.Renamed, e.OldFullPath);
             }
 
-            ////Logger.LogTrace("FSW Renamed: {path} -> {new}", e.OldFullPath, e.FullPath);
+            //Logger.Debug("FSW Renamed: {path} -> {new}", e.OldFullPath, e.FullPath);
         }
 
         _ = PenumbraWatcherExecution();
@@ -293,17 +293,17 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
             foreach (var entry in deletedEntries)
             {
-                ////Logger.LogDebug("FSW Change: Deletion - {val}", entry);
+                //Logger.Debug("FSW Change: Deletion - {val}", entry);
             }
 
             foreach (var entry in renamedEntries)
             {
-                ////Logger.LogDebug("FSW Change: Renamed - {oldVal} => {val}", entry.Value.OldPath, entry.Key);
+                //Logger.Debug("FSW Change: Renamed - {oldVal} => {val}", entry.Value.OldPath, entry.Key);
             }
 
             foreach (var entry in remainingEntries)
             {
-                ////Logger.LogDebug("FSW Change: Creation or Change - {val}", entry);
+                //Logger.Debug("FSW Change: Creation or Change - {val}", entry);
             }
 
             var allChanges = deletedEntries
@@ -357,12 +357,12 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         var token = _scanCancellationTokenSource.Token;
         _ = Task.Run(async () =>
         {
-            ////Logger.LogDebug("Starting Full File Scan");
+            //Logger.Debug("Starting Full File Scan");
             TotalFiles = 0;
             _currentFileProgress = 0;
             while (_dalamudUtil.IsOnFrameworkThread)
             {
-                ////Logger.LogWarning("Scanner is on framework, waiting for leaving thread before continuing");
+                //Logger.Warning("Scanner is on framework, waiting for leaving thread before continuing");
                 await Task.Delay(250, token).ConfigureAwait(false);
             }
 
@@ -374,7 +374,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
                 }
                 catch (Exception ex)
                 {
-                    ////Logger.LogError(ex, "Error during Full File Scan");
+                    //Logger.Error(ex, "Error during Full File Scan");
                 }
             })
             {
@@ -407,7 +407,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            ////Logger.LogWarning(ex, "Could not determine drive size for Storage Folder {folder}", CachePath.CacheLocation);
+            //Logger.Warning(ex, "Could not determine drive size for Storage Folder {folder}", CachePath.CacheLocation);
         }
 
         var files = Directory.EnumerateFiles(CachePath.CacheLocation).Select(f => new FileInfo(f))
@@ -474,12 +474,12 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         if (string.IsNullOrEmpty(penumbraDir) || !Directory.Exists(penumbraDir))
         {
             penDirExists = false;
-            ////Logger.LogWarning("Penumbra directory is not set or does not exist.");
+            //Logger.Warning("Penumbra directory is not set or does not exist.");
         }
         if (string.IsNullOrEmpty(CachePath.CacheLocation) || !Directory.Exists(CachePath.CacheLocation))
         {
             cacheDirExists = false;
-            ////Logger.LogWarning("Mare Cache directory is not set or does not exist.");
+            //Logger.Warning("Mare Cache directory is not set or does not exist.");
         }
         if (!penDirExists || !cacheDirExists)
         {
@@ -488,7 +488,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
         var previousThreadPriority = Thread.CurrentThread.Priority;
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
-        ////Logger.LogDebug("Getting files from {penumbra} and {storage}", penumbraDir, CachePath.CacheLocation);
+        //Logger.Debug("Getting files from {penumbra} and {storage}", penumbraDir, CachePath.CacheLocation);
 
         Dictionary<string, string[]> penumbraFiles = new(StringComparer.Ordinal);
         foreach (var folder in Directory.EnumerateDirectories(penumbraDir!))
@@ -507,7 +507,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             }
             catch (Exception ex)
             {
-                ////Logger.LogWarning(ex, "Could not enumerate path {path}", folder);
+                //Logger.Warning(ex, "Could not enumerate path {path}", folder);
             }
             Thread.Sleep(50);
             if (ct.IsCancellationRequested) return;
@@ -549,11 +549,11 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
         for (int i = 0; i < threadCount; i++)
         {
-            ////Logger.LogTrace("Creating Thread {i}", i);
+            //Logger.Debug("Creating Thread {i}", i);
             workerThreads[i] = new((tcounter) =>
             {
                 var threadNr = (int)tcounter!;
-                ////Logger.LogTrace("Spawning Worker Thread {i}", threadNr);
+                //Logger.Debug("Spawning Worker Thread {i}", threadNr);
                 while (!ct.IsCancellationRequested && fileCaches.TryDequeue(out var workload))
                 {
                     try
@@ -562,7 +562,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
                         if (!_ipcManager.Penumbra.APIAvailable)
                         {
-                            ////Logger.LogWarning("Penumbra not available");
+                            //Logger.Warning("Penumbra not available");
                             return;
                         }
 
@@ -573,23 +573,23 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
                         }
                         if (validatedCacheResult.State == FileState.RequireUpdate)
                         {
-                            ////Logger.LogTrace("To update: {path}", validatedCacheResult.FileCache.ResolvedFilepath);
+                            //Logger.Debug("To update: {path}", validatedCacheResult.FileCache.ResolvedFilepath);
                             lock (sync) { entitiesToUpdate.Add(validatedCacheResult.FileCache); }
                         }
                         else if (validatedCacheResult.State == FileState.RequireDeletion)
                         {
-                            ////Logger.LogTrace("To delete: {path}", validatedCacheResult.FileCache.ResolvedFilepath);
+                            //Logger.Debug("To delete: {path}", validatedCacheResult.FileCache.ResolvedFilepath);
                             lock (sync) { entitiesToRemove.Add(validatedCacheResult.FileCache); }
                         }
                     }
                     catch (Exception ex)
                     {
-                        ////Logger.LogWarning(ex, "Failed validating {path}", workload.ResolvedFilepath);
+                        //Logger.Warning(ex, "Failed validating {path}", workload.ResolvedFilepath);
                     }
                     Interlocked.Increment(ref _currentFileProgress);
                 }
 
-                ////Logger.LogTrace("Ending Worker Thread {i}", threadNr);
+                //Logger.Debug("Ending Worker Thread {i}", threadNr);
             })
             {
                 Priority = ThreadPriority.Lowest,
@@ -605,11 +605,11 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
         if (ct.IsCancellationRequested) return;
 
-        ////Logger.LogTrace("Threads exited");
+        //Logger.Debug("Threads exited");
 
         if (!_ipcManager.Penumbra.APIAvailable)
         {
-            ////Logger.LogWarning("Penumbra not available");
+            //Logger.Warning("Penumbra not available");
             return;
         }
 
@@ -628,11 +628,11 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             _fileDbManager.WriteOutFullCsv();
         }
 
-        ////Logger.LogTrace("Scanner validated existing db files");
+        //Logger.Debug("Scanner validated existing db files");
 
         if (!_ipcManager.Penumbra.APIAvailable)
         {
-            ////Logger.LogWarning("Penumbra not available");
+            //Logger.Warning("Penumbra not available");
             return;
         }
 
@@ -652,7 +652,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
                     if (!_ipcManager.Penumbra.APIAvailable)
                     {
-                        ////Logger.LogWarning("Penumbra not available");
+                        //Logger.Warning("Penumbra not available");
                         return;
                     }
 
@@ -663,16 +663,16 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
                     }
                     catch (Exception ex)
                     {
-                        ////Logger.LogWarning(ex, "Failed adding {file}", cachePath);
+                        //Logger.Warning(ex, "Failed adding {file}", cachePath);
                     }
 
                     Interlocked.Increment(ref _currentFileProgress);
                 });
 
-            ////Logger.LogTrace("Scanner added {notScanned} new files to db", allScannedFiles.Count(c => !c.Value));
+            //Logger.Debug("Scanner added {notScanned} new files to db", allScannedFiles.Count(c => !c.Value));
         }
 
-        ////Logger.LogDebug("Scan complete");
+        //Logger.Debug("Scan complete");
         TotalFiles = 0;
         _currentFileProgress = 0;
         entitiesToRemove.Clear();
