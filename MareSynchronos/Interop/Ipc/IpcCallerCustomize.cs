@@ -20,10 +20,10 @@ public sealed class IpcCallerCustomize : IIpcCaller
     private readonly ICallGateSubscriber<Guid, int> _customizePlusDeleteByUniqueId;
     private readonly ILogger<IpcCallerCustomize> _Logger;
     private DalamudUtilService _dalamudUtil;
-    private MareMediator _mareMediator;
+    private McdfMediator _mareMediator;
 
     public IpcCallerCustomize(ILogger<IpcCallerCustomize> Logger, IDalamudPluginInterface dalamudPluginInterface,
-        DalamudUtilService dalamudUtil, MareMediator mareMediator)
+        DalamudUtilService dalamudUtil, McdfMediator mareMediator)
     {
         _customizePlusApiVersion = dalamudPluginInterface.GetIpcSubscriber<(int, int)>("CustomizePlus.General.GetApiVersion");
         _customizePlusGetActiveProfile = dalamudPluginInterface.GetIpcSubscriber<ushort, (int, Guid?)>("CustomizePlus.Profile.GetActiveProfileIdOnCharacter");

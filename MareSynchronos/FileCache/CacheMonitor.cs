@@ -23,7 +23,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     public static readonly IImmutableList<string> AllowedFileExtensions = [".mdl", ".tex", ".mtrl", ".tmb", ".pap", ".avfx", ".atex", ".sklb", ".eid", ".phyb", ".pbd", ".scd", ".skp", ".shpk"];
 
     public CacheMonitor(ILogger<CacheMonitor> Logger, IpcManager ipcManager, MareConfigService configService,
-        FileCacheManager fileDbManager, MareMediator mediator,DalamudUtilService dalamudUtil,
+        FileCacheManager fileDbManager, McdfMediator mediator,DalamudUtilService dalamudUtil,
         FileCompactor fileCompactor, PerformanceCollectorService performanceCollector) : base(Logger, mediator)
     {
         _performanceCollector = performanceCollector;

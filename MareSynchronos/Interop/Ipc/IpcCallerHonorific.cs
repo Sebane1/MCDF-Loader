@@ -18,11 +18,11 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly ICallGateSubscriber<object> _honorificReady;
     private readonly ICallGateSubscriber<int, string, object> _honorificSetCharacterTitle;
     private readonly ILogger<IpcCallerHonorific> _Logger;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
     public IpcCallerHonorific(ILogger<IpcCallerHonorific> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        MareMediator mareMediator)
+        McdfMediator mareMediator)
     {
         //_//Logger = //Logger;
         _mareMediator = mareMediator;

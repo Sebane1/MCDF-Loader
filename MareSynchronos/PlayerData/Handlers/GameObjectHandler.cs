@@ -24,7 +24,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     private CancellationTokenSource _zoningCts = new();
 
     public GameObjectHandler(ILogger<GameObjectHandler> Logger, PerformanceCollectorService performanceCollectorService,
-        MareMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base(Logger, mediator)
+        McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base(Logger, mediator)
     {
         ObjectKind = objectKind;
         _dalamudUtil = dalamudUtil;

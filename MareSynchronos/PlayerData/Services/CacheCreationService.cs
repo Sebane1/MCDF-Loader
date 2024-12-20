@@ -25,7 +25,7 @@ public sealed class CacheCreationService : DisposableMediatorSubscriberBase
     private bool _isZoning = false;
     private readonly Dictionary<ObjectKind, CancellationTokenSource> _glamourerCts = new();
 
-    public CacheCreationService(ILogger<CacheCreationService> logger, MareMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
+    public CacheCreationService(ILogger<CacheCreationService> logger, McdfMediator mediator, GameObjectHandlerFactory gameObjectHandlerFactory,
         PlayerDataFactory characterDataFactory, DalamudUtilService dalamudUtil) : base(logger, mediator)
     {
         _characterDataFactory = characterDataFactory;

@@ -20,12 +20,12 @@ public class PlayerDataFactory
     private readonly ILogger<PlayerDataFactory> _logger;
     private readonly PerformanceCollectorService _performanceCollector;
     private readonly XivDataAnalyzer _modelAnalyzer;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly TransientResourceManager _transientResourceManager;
 
     public PlayerDataFactory(ILogger<PlayerDataFactory> logger, DalamudUtilService dalamudUtil, IpcManager ipcManager,
         TransientResourceManager transientResourceManager, FileCacheManager fileReplacementFactory,
-        PerformanceCollectorService performanceCollector, XivDataAnalyzer modelAnalyzer, MareMediator mareMediator)
+        PerformanceCollectorService performanceCollector, XivDataAnalyzer modelAnalyzer, McdfMediator mareMediator)
     {
         _logger = logger;
         _dalamudUtil = dalamudUtil;

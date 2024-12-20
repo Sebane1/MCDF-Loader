@@ -5,7 +5,7 @@ namespace MareSynchronos.Interop.Ipc;
 
 public sealed partial class IpcManager : DisposableMediatorSubscriberBase
 {
-    public IpcManager(ILogger<IpcManager> Logger, MareMediator mediator,
+    public IpcManager(ILogger<IpcManager> Logger, McdfMediator mediator,
         IpcCallerPenumbra penumbraIpc, IpcCallerGlamourer glamourerIpc, IpcCallerCustomize customizeIpc, IpcCallerHeels heelsIpc,
         IpcCallerHonorific honorificIpc, IpcCallerMoodles moodlesIpc, IpcCallerPetNames ipcCallerPetNames) : base(Logger, mediator)
     {

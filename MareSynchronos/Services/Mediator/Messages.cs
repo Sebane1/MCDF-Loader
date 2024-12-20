@@ -1,10 +1,8 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using MareSynchronos.API.Data;
 using MareSynchronos.API.Dto;
-using MareSynchronos.API.Dto.Group;
 using MareSynchronos.MareConfiguration.Models;
 using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.PlayerData.Pairs;
 using MareSynchronos.Services.Events;
 using System.Numerics;
 

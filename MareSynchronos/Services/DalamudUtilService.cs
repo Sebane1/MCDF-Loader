@@ -41,7 +41,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
     public DalamudUtilService(ILogger<DalamudUtilService> Logger, IClientState clientState, IObjectTable objectTable, IFramework framework,
         IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager,
-        BlockedCharacterHandler blockedCharacterHandler, MareMediator mediator, PerformanceCollectorService performanceCollector)
+        BlockedCharacterHandler blockedCharacterHandler, McdfMediator mediator, PerformanceCollectorService performanceCollector)
     {
         _performanceCollector = performanceCollector;
         //_//Logger = //Logger;
@@ -76,7 +76,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public uint ClassJobId => _classJobId!.Value;
     public Lazy<Dictionary<ushort, string>> WorldData { get; private set; }
 
-    public MareMediator Mediator { get; }
+    public McdfMediator Mediator { get; }
 
     public Dalamud.Game.ClientState.Objects.Types.IGameObject? CreateGameObject(IntPtr reference)
     {

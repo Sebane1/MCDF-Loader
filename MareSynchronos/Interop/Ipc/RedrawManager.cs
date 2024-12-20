@@ -10,14 +10,14 @@ namespace MareSynchronos.Interop.Ipc;
 
 public class RedrawManager
 {
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly ConcurrentDictionary<nint, bool> _penumbraRedrawRequests = [];
     private CancellationTokenSource _disposalCts = new();
 
     public SemaphoreSlim RedrawSemaphore { get; init; } = new(2, 2);
 
-    public RedrawManager(MareMediator mareMediator, DalamudUtilService dalamudUtil)
+    public RedrawManager(McdfMediator mareMediator, DalamudUtilService dalamudUtil)
     {
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;

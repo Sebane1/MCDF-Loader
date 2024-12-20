@@ -15,7 +15,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
 {
     private readonly IDalamudPluginInterface _pi;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly RedrawManager _redrawManager;
     private bool _shownPenumbraUnavailable = false;
     private string? _penumbraModDirectory;
@@ -53,8 +53,8 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
     private readonly ResolvePlayerPathsAsync _penumbraResolvePaths;
     private readonly GetGameObjectResourcePaths _penumbraResourcePaths;
 
-    public IpcCallerPenumbra(Logger<IpcCallerPenumbra> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        MareMediator mareMediator, RedrawManager redrawManager) : base(Logger, mareMediator)
+    public IpcCallerPenumbra(ILogger<IpcCallerPenumbra> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+        McdfMediator mareMediator, RedrawManager redrawManager) : base(Logger, mareMediator)
     {
         _pi = pi;
         _dalamudUtil = dalamudUtil;

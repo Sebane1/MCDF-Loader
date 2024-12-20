@@ -9,7 +9,7 @@ namespace MareSynchronos.Interop.Ipc;
 public sealed class IpcCallerHeels : IIpcCaller
 {
     private readonly ILogger<IpcCallerHeels> _Logger;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly ICallGateSubscriber<(int, int)> _heelsGetApiVersion;
     private readonly ICallGateSubscriber<string> _heelsGetOffset;
@@ -17,9 +17,9 @@ public sealed class IpcCallerHeels : IIpcCaller
     private readonly ICallGateSubscriber<int, string, object?> _heelsRegisterPlayer;
     private readonly ICallGateSubscriber<int, object?> _heelsUnregisterPlayer;
 
-    public IpcCallerHeels(Logger<IpcCallerHeels> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, MareMediator mareMediator)
+    public IpcCallerHeels(ILogger<IpcCallerHeels> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator)
     {
-        //_//Logger = //Logger;
+        _Logger = Logger;
         _mareMediator = mareMediator;
         _dalamudUtil = dalamudUtil;
         _heelsGetApiVersion = pi.GetIpcSubscriber<(int, int)>("SimpleHeels.ApiVersion");

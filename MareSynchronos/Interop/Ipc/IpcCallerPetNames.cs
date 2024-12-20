@@ -11,7 +11,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
 {
     private readonly ILogger<IpcCallerPetNames> _Logger;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
 
     private readonly ICallGateSubscriber<object> _petnamesReady;
     private readonly ICallGateSubscriber<object> _petnamesDisposing;
@@ -24,7 +24,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private readonly ICallGateSubscriber<ushort, object> _clearPlayerData;
 
     public IpcCallerPetNames(ILogger<IpcCallerPetNames> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        MareMediator mareMediator)
+        McdfMediator mareMediator)
     {
         //_//Logger = //Logger;
         _dalamudUtil = dalamudUtil;

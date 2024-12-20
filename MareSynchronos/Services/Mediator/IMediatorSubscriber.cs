@@ -2,5 +2,5 @@
 
 public interface IMediatorSubscriber
 {
-    MareMediator Mediator { get; }
+    McdfMediator Mediator { get; }
 }

@@ -17,7 +17,7 @@ public sealed class FileCacheManager : IHostedService
     public const string CsvSplit = "|";
     public const string PenumbraPrefix = "{penumbra}";
     private readonly MareConfigService _configService;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly string _csvPath;
     private readonly ConcurrentDictionary<string, List<FileCacheEntity>> _fileCaches = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _getCachesByPathsSemaphore = new(1, 1);
@@ -25,7 +25,7 @@ public sealed class FileCacheManager : IHostedService
     private readonly IpcManager _ipcManager;
     private readonly ILogger<FileCacheManager> _Logger;
 
-    public FileCacheManager(ILogger<FileCacheManager> Logger, IpcManager ipcManager, MareConfigService configService, MareMediator mareMediator)
+    public FileCacheManager(ILogger<FileCacheManager> Logger, IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
     {
         _Logger = Logger;
         _ipcManager = ipcManager;

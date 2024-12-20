@@ -21,13 +21,12 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     private ICallGateProvider<List<nint>>? _handledGameAddresses;
     private readonly List<GameObjectHandler> _activeGameObjectHandlers = [];
 
-    public MareMediator Mediator { get; init; }
+    public McdfMediator Mediator { get; init; }
 
     public IpcProvider(ILogger<IpcProvider> Logger, IDalamudPluginInterface pi,
         MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
-        MareMediator mareMediator)
+        McdfMediator mareMediator)
     {
-        //_//Logger = //Logger;
         _pi = pi;
         _mareCharaFileManager = mareCharaFileManager;
         _dalamudUtil = dalamudUtil;
@@ -47,24 +46,11 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        //_//Logger.LogInformation("Starting IpcProviderService");
-        _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, bool>("MareSynchronos.LoadMcdf");
-        _loadFileProvider.RegisterFunc(LoadMcdf);
-        _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("MareSynchronos.LoadMcdfAsync");
-        _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
-        _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("MareSynchronos.GetHandledAddresses");
-        _handledGameAddresses.RegisterFunc(GetHandledAddresses);
-        //_//Logger.LogInformation("Started IpcProviderService");
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        //_//Logger.LogDebug("Stopping IpcProvider Service");
-        _loadFileProvider?.UnregisterFunc();
-        _loadFileAsyncProvider?.UnregisterFunc();
-        _handledGameAddresses?.UnregisterFunc();
-        Mediator.UnsubscribeAll(this);
         return Task.CompletedTask;
     }
 
@@ -97,7 +83,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         }
         catch (Exception e)
         {
-            //_//Logger.LogError(e, "Failure of IPC call");
+            _Logger.LogError(e, "Failure of IPC call");
         }
         finally
         {

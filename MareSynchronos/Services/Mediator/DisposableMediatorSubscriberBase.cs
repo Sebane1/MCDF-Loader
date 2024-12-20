@@ -4,7 +4,7 @@ namespace MareSynchronos.Services.Mediator;
 
 public abstract class DisposableMediatorSubscriberBase : MediatorSubscriberBase, IDisposable
 {
-    protected DisposableMediatorSubscriberBase(ILogger Logger, MareMediator mediator) : base(Logger, mediator)
+    protected DisposableMediatorSubscriberBase(ILogger Logger, McdfMediator mediator) : base(Logger, mediator)
     {
     }
 

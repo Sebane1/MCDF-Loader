@@ -15,7 +15,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private readonly ILogger<IpcCallerGlamourer> _Logger;
     private readonly IDalamudPluginInterface _pi;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
     private readonly RedrawManager _redrawManager;
 
     private readonly ApiVersion _glamourerApiVersions;
@@ -30,7 +30,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private bool _shownGlamourerUnavailable = false;
     private readonly uint LockCode = 0x6D617265;
 
-    public IpcCallerGlamourer(ILogger<IpcCallerGlamourer> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, MareMediator mareMediator,
+    public IpcCallerGlamourer(ILogger<IpcCallerGlamourer> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
         RedrawManager redrawManager) : base(Logger, mareMediator)
     {
         _glamourerApiVersions = new ApiVersion(pi);

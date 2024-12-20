@@ -31,7 +31,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
     public MareCharaFileManager(ILogger<MareCharaFileManager> Logger, GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
-        MareMediator mediator) : base(Logger, mediator)
+        McdfMediator mediator) : base(Logger, mediator)
     {
         _factory = new(manager);
         //_//Logger = //Logger;

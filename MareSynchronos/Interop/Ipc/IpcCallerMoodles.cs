@@ -16,10 +16,10 @@ public sealed class IpcCallerMoodles : IIpcCaller
     private readonly ICallGateSubscriber<nint, object> _moodlesRevertStatus;
     private readonly ILogger<IpcCallerMoodles> _Logger;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareMediator _mareMediator;
+    private readonly McdfMediator _mareMediator;
 
     public IpcCallerMoodles(ILogger<IpcCallerMoodles> Logger, IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        MareMediator mareMediator)
+        McdfMediator mareMediator)
     {
         //_//Logger = //Logger;
         _dalamudUtil = dalamudUtil;

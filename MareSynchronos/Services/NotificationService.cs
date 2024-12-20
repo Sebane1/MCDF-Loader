@@ -17,7 +17,7 @@ public class NotificationService : DisposableMediatorSubscriberBase, IHostedServ
     private readonly IChatGui _chatGui;
     private readonly MareConfigService _configurationService;
 
-    public NotificationService(ILogger<NotificationService> logger, MareMediator mediator,
+    public NotificationService(ILogger<NotificationService> logger, McdfMediator mediator,
         DalamudUtilService dalamudUtilService,
         INotificationManager notificationManager,
         IChatGui chatGui, MareConfigService configurationService) : base(logger, mediator)

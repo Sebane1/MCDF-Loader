@@ -7,18 +7,18 @@ using System.Text;
 
 namespace MareSynchronos.Services.Mediator;
 
-public sealed class MareMediator : IHostedService
+public sealed class McdfMediator : IHostedService
 {
     private readonly object _addRemoveLock = new();
     private readonly ConcurrentDictionary<object, DateTime> _lastErrorTime = [];
-    private readonly ILogger<MareMediator> _Logger;
+    private readonly ILogger<McdfMediator> _Logger;
     private readonly CancellationTokenSource _loopCts = new();
     private readonly ConcurrentQueue<MessageBase> _messageQueue = new();
     private readonly MareConfigService _mareConfigService;
     private readonly ConcurrentDictionary<Type, HashSet<SubscriberAction>> _subscriberDict = [];
     private bool _processQueue = false;
     private readonly ConcurrentDictionary<Type, MethodInfo?> _genericExecuteMethods = new();
-    public MareMediator(ILogger<MareMediator> Logger, MareConfigService mareConfigService)
+    public McdfMediator(ILogger<McdfMediator> Logger, MareConfigService mareConfigService)
     {
         //_//Logger = //Logger;
         _mareConfigService = mareConfigService;
