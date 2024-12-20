@@ -1,7 +1,4 @@
-# Mare Synchronos Dalamud Plugin
+Intended to be a standalone library for loading offline MCDF files in game.
 
-Available at [This dalamud Repo](https://raw.githubusercontent.com/Penumbra-Sync/repo/main/plogonmaster.json)
 
-# [Mare Synchronos Discord](https://discord.gg/5HVveFefcB)
-
-Readme TBD
+Based on implementations done by Mare Syncronos: https://github.com/Penumbra-Sync/client
