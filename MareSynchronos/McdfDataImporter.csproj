@@ -57,10 +57,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MareAPI\MareSynchronosAPI\MareSynchronos.API.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="FFXIVClientStructs">
       <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
       <Private>false</Private>
@@ -97,6 +93,10 @@
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\api\MareSynchronosAPI\MareSynchronos.API.csproj" />
   </ItemGroup>
 
 </Project>
