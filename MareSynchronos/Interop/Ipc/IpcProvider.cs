@@ -24,7 +24,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public McdfMediator Mediator { get; init; }
 
-    public IpcProvider( IDalamudPluginInterface pi,
+    public IpcProvider(IDalamudPluginInterface pi,
         MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
         McdfMediator mareMediator)
     {
@@ -72,7 +72,6 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     private async Task<bool> LoadMcdfAsync(string path, IGameObject target)
     {
         await ApplyFileAsync(path, target).ConfigureAwait(false);
-
         return true;
     }
 
@@ -87,16 +86,12 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         try
         {
-            var expectedLength = _mareCharaFileManager.LoadMareCharaFile(path);
-            await _mareCharaFileManager.ApplyMareCharaFile(target, expectedLength).ConfigureAwait(false);
+            var data = _mareCharaFileManager.LoadMareCharaFile(path);
+            await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2).ConfigureAwait(false);
         }
         catch (Exception e)
         {
             _Logger.Error(e, "Failure of IPC call");
-        }
-        finally
-        {
-            _mareCharaFileManager.ClearMareCharaFile();
         }
     }
 
