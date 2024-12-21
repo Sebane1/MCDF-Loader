@@ -27,13 +27,13 @@ public sealed class FileCacheManager : IHostedService
     private readonly IpcManager _ipcManager;
     private readonly IPluginLog _Logger;
 
-    public FileCacheManager( IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
+    public FileCacheManager(IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
     {
         _Logger = EntryPoint.PluginLog;
         _ipcManager = ipcManager;
         _configService = configService;
         _mareMediator = mareMediator;
-        _csvPath = Path.Combine(configService.ConfigurationDirectory, "FileCache.csv");
+        _csvPath = Path.Combine(CachePath.CacheLocation, "FileCache.csv");
     }
 
     private string CsvBakPath => _csvPath + ".bak";
@@ -195,7 +195,7 @@ public sealed class FileCacheManager : IHostedService
 
             foreach (var entry in cleanedPaths)
             {
-                //_Logger.Debug("Checking {path}", entry.Value);
+                _Logger.Debug("Checking {path}", entry.Value);
 
                 if (dict.TryGetValue(entry.Value, out var entity))
                 {
@@ -204,10 +204,14 @@ public sealed class FileCacheManager : IHostedService
                 }
                 else
                 {
-                    if (!entry.Value.Contains(CachePrefix, StringComparison.Ordinal))
-                        result.Add(entry.Key, CreateFileEntry(entry.Key));
-                    else
-                        result.Add(entry.Key, CreateCacheEntry(entry.Key));
+                    try
+                    {
+                        if (!entry.Value.Contains(CachePrefix, StringComparison.Ordinal))
+                            result.Add(entry.Key, CreateFileEntry(entry.Key));
+                        else
+                            result.Add(entry.Key, CreateCacheEntry(entry.Key));
+                    }
+                    catch { }
                 }
             }
 
