@@ -24,7 +24,7 @@ public class PlayerDataFactory
     private readonly McdfMediator _mareMediator;
     private readonly TransientResourceManager _transientResourceManager;
 
-    public PlayerDataFactory( DalamudUtilService dalamudUtil, IpcManager ipcManager,
+    public PlayerDataFactory(DalamudUtilService dalamudUtil, IpcManager ipcManager,
         TransientResourceManager transientResourceManager, FileCacheManager fileReplacementFactory,
         PerformanceCollectorService performanceCollector, XivDataAnalyzer modelAnalyzer, McdfMediator mareMediator)
     {
@@ -131,7 +131,7 @@ public class PlayerDataFactory
         previousData.CustomizePlusScale.Remove(objectKind);
 
         // wait until chara is not drawing and present so nothing spontaneously explodes
-        await _dalamudUtil.WaitWhileCharacterIsDrawing( playerRelatedObject, Guid.NewGuid(), 30000, ct: token).ConfigureAwait(false);
+        await _dalamudUtil.WaitWhileCharacterIsDrawing(playerRelatedObject, Guid.NewGuid(), 30000, ct: token).ConfigureAwait(false);
         int totalWaitTime = 10000;
         while (!await _dalamudUtil.IsObjectPresentAsync(await _dalamudUtil.CreateGameObjectAsync(playerRelatedObject.Address).ConfigureAwait(false)).ConfigureAwait(false) && totalWaitTime > 0)
         {
@@ -149,7 +149,7 @@ public class PlayerDataFactory
         // penumbra call, it's currently broken
         Dictionary<string, HashSet<string>>? resolvedPaths;
 
-        resolvedPaths = (await _ipcManager.Penumbra.GetCharacterData( playerRelatedObject).ConfigureAwait(false));
+        resolvedPaths = (await _ipcManager.Penumbra.GetCharacterData(playerRelatedObject).ConfigureAwait(false));
         if (resolvedPaths == null) throw new InvalidOperationException("Penumbra returned null data");
 
         previousData.FileReplacements[objectKind] =
@@ -229,7 +229,10 @@ public class PlayerDataFactory
             var computedPaths = _fileCacheManager.GetFileCachesByPaths(toCompute.Select(c => c.ResolvedPath).ToArray());
             foreach (var file in toCompute)
             {
-                file.Hash = computedPaths[file.ResolvedPath]?.Hash ?? string.Empty;
+                if (computedPaths.ContainsKey(file.ResolvedPath))
+                {
+                    file.Hash = computedPaths[file.ResolvedPath]?.Hash ?? string.Empty;
+                }
             }
             var removed = fileReplacements.RemoveWhere(f => !f.IsFileSwap && string.IsNullOrEmpty(f.Hash));
             if (removed > 0)
