@@ -33,10 +33,11 @@ public sealed class FileCacheManager : IHostedService
         _ipcManager = ipcManager;
         _configService = configService;
         _mareMediator = mareMediator;
-        _csvPath = Path.Combine(CachePath.CacheLocation, "FileCache.csv");
     }
 
-    private string CsvBakPath => _csvPath + ".bak";
+    private string CsvBakPath => CsvPath + ".bak";
+
+    public string CsvPath => CachePath.CacheLocation + "\\FileCache.csv";
 
     public FileCacheEntity? CreateCacheEntry(string path)
     {
@@ -280,14 +281,14 @@ public sealed class FileCacheManager : IHostedService
                 sb.AppendLine(entry.CsvEntry);
             }
 
-            if (File.Exists(_csvPath))
+            if (File.Exists(CsvPath))
             {
-                File.Copy(_csvPath, CsvBakPath, overwrite: true);
+                File.Copy(CsvPath, CsvBakPath, overwrite: true);
             }
 
             try
             {
-                File.WriteAllText(_csvPath, sb.ToString());
+                File.WriteAllText(CsvPath, sb.ToString());
                 File.Delete(CsvBakPath);
             }
             catch
@@ -340,7 +341,7 @@ public sealed class FileCacheManager : IHostedService
         AddHashedFile(entity);
         lock (_fileWriteLock)
         {
-            File.AppendAllLines(_csvPath, new[] { entity.CsvEntry });
+            File.AppendAllLines(CsvPath, new[] { entity.CsvEntry });
         }
         var result = GetFileCacheByPath(fileInfo.FullName);
         _Logger.Debug("Creating cache entity for {name} success: {success}", fileInfo.FullName, (result != null));
@@ -398,9 +399,9 @@ public sealed class FileCacheManager : IHostedService
 
                 if (File.Exists(CsvBakPath))
                 {
-                    _Logger.Information("{bakPath} found, moving to {csvPath}", CsvBakPath, _csvPath);
+                    _Logger.Information("{bakPath} found, moving to {csvPath}", CsvBakPath, CsvPath);
 
-                    File.Move(CsvBakPath, _csvPath, overwrite: true);
+                    File.Move(CsvBakPath, CsvPath, overwrite: true);
                 }
             }
             catch (Exception ex)
@@ -418,7 +419,7 @@ public sealed class FileCacheManager : IHostedService
             }
         }
 
-        if (File.Exists(_csvPath))
+        if (File.Exists(CsvPath))
         {
             if (!_ipcManager.Penumbra.APIAvailable || string.IsNullOrEmpty(_ipcManager.Penumbra.ModDirectory))
             {
@@ -427,7 +428,7 @@ public sealed class FileCacheManager : IHostedService
                     MareConfiguration.Models.NotificationType.Error));
             }
 
-            _Logger.Information("{csvPath} found, parsing", _csvPath);
+            _Logger.Information("{csvPath} found, parsing", CsvPath);
 
             bool success = false;
             string[] entries = [];
@@ -436,24 +437,24 @@ public sealed class FileCacheManager : IHostedService
             {
                 try
                 {
-                    _Logger.Information("Attempting to read {csvPath}", _csvPath);
-                    entries = File.ReadAllLines(_csvPath);
+                    _Logger.Information("Attempting to read {csvPath}", CsvPath);
+                    entries = File.ReadAllLines(CsvPath);
                     success = true;
                 }
                 catch (Exception ex)
                 {
                     attempts++;
-                    _Logger.Warning(ex, "Could not open {file}, trying again", _csvPath);
+                    _Logger.Warning(ex, "Could not open {file}, trying again", CsvPath);
                     Thread.Sleep(100);
                 }
             }
 
             if (!entries.Any())
             {
-                _Logger.Warning("Could not load entries from {path}, continuing with empty file cache", _csvPath);
+                _Logger.Warning("Could not load entries from {path}, continuing with empty file cache", CsvPath);
             }
 
-            _Logger.Information("Found {amount} files in {path}", entries.Length, _csvPath);
+            _Logger.Information("Found {amount} files in {path}", entries.Length, CsvPath);
 
             Dictionary<string, bool> processedFiles = new(StringComparer.OrdinalIgnoreCase);
             foreach (var entry in entries)
