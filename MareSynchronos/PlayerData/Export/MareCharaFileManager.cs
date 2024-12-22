@@ -30,6 +30,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private readonly FileCacheManager _manager;
     private int _globalFileCounter = 0;
     private bool _isInGpose = true;
+    private CharacterData _characterData;
 
     public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
@@ -44,10 +45,16 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         _dalamudUtil = dalamudUtil;
         _gposeGameObjects = [];
         _gposeCustomizeObjects = [];
+        Mediator.Subscribe<PlayerChangedMessage>(this, (x) => PlayerManagerOnPlayerHasChanged(x.Data));
         Mediator.Subscribe<GposeStartMessage>(this, _ => _isInGpose = true);
         Mediator.Subscribe<GposeEndMessage>(this, async _ =>
         {
         });
+    }
+
+    private void PlayerManagerOnPlayerHasChanged(CharacterData characterData)
+    {
+        _characterData = characterData;
     }
 
     public bool CurrentlyWorking { get; private set; } = false;
@@ -164,16 +171,16 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         finally { CurrentlyWorking = false; }
     }
 
-    public void SaveMareCharaFile(CharacterData? dto, string description, string filePath)
+    public void SaveMareCharaFile(string description, string filePath)
     {
         CurrentlyWorking = true;
         var tempFilePath = filePath + ".tmp";
 
         try
         {
-            if (dto == null) return;
+            if (_characterData == null) return;
 
-            var mareCharaFileData = _factory.Create(description, dto);
+            var mareCharaFileData = _factory.Create(description, _characterData);
             MareCharaFileHeader output = new(MareCharaFileHeader.CurrentVersion, mareCharaFileData);
 
             using var fs = new FileStream(tempFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
