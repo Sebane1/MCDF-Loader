@@ -63,6 +63,10 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     {
         if (charaTarget == null) return;
         Dictionary<string, string> extractedFiles = new(StringComparer.Ordinal);
+        while (CurrentlyWorking)
+        {
+            await Task.Delay(500);
+        }
         CurrentlyWorking = true;
         try
         {
