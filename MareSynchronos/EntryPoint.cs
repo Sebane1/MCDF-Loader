@@ -36,7 +36,7 @@ public sealed class EntryPoint
         IGameGui gameGui, IDtrBar dtrBar, IPluginLog pluginLog, ITargetManager targetManager, INotificationManager notificationManager,
         ITextureProvider textureProvider, IContextMenu contextMenu, IGameInteropProvider gameInteropProvider, string path)
     {
-        CachePath.CacheLocation = path;
+        McdfAccessUtils.CacheLocation = path;
         PluginLog = pluginLog;
         if (!Directory.Exists(pluginInterface.ConfigDirectory.FullName))
             Directory.CreateDirectory(pluginInterface.ConfigDirectory.FullName);

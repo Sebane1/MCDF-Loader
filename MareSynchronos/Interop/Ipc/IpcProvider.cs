@@ -6,6 +6,7 @@ using MareSynchronos.PlayerData.Export;
 using MareSynchronos.PlayerData.Handlers;
 using MareSynchronos.Services;
 using MareSynchronos.Services.Mediator;
+using McdfDataImporter;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -44,6 +45,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             _activeGameObjectHandlers.Remove(msg.GameObjectHandler);
         });
         Task.Run(() => StartAsync(CancellationToken.None));
+        McdfAccessUtils.McdfManager = this;
     }
     public async void Dispose()
     {
@@ -69,17 +71,21 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         return Task.CompletedTask;
     }
 
-    private async Task<bool> LoadMcdfAsync(string path, IGameObject target)
+    public async Task<bool> LoadMcdfAsync(string path, IGameObject target)
     {
         await ApplyFileAsync(path, target).ConfigureAwait(false);
         return true;
     }
 
-    private bool LoadMcdf(string path, IGameObject target)
+    public bool LoadMcdf(string path, IGameObject target)
     {
         _ = Task.Run(async () => await ApplyFileAsync(path, target).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
+    }
+    public bool IsWorking()
+    {
+        return _mareCharaFileManager.CurrentlyWorking;
     }
 
     private async Task ApplyFileAsync(string path, IGameObject target)
@@ -87,7 +93,13 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         try
         {
             var data = _mareCharaFileManager.LoadMareCharaFile(path);
-            await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2).ConfigureAwait(false);
+            if (data != null)
+            {
+                if (target != null)
+                {
+                    await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2).ConfigureAwait(false);
+                }
+            }
         }
         catch (Exception e)
         {

@@ -24,8 +24,8 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     private byte _classJob = 0;
     private CancellationTokenSource _zoningCts = new();
 
-    public GameObjectHandler( PerformanceCollectorService performanceCollectorService,
-        McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base( mediator)
+    public GameObjectHandler(PerformanceCollectorService performanceCollectorService,
+        McdfMediator mediator, DalamudUtilService dalamudUtil, ObjectKind objectKind, Func<IntPtr> getAddress, bool ownedObject = true) : base(mediator)
     {
         ObjectKind = objectKind;
         _dalamudUtil = dalamudUtil;
@@ -233,14 +233,14 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
                 equipDiff |= CompareAndUpdateMainHand((Weapon*)mh.DrawObject);
                 equipDiff |= CompareAndUpdateOffHand((Weapon*)oh.DrawObject);
 
-                if (equipDiff){}
-                    Logger.Debug("Checking [{this}] equip data as human from draw obj, result: {diff}", this, equipDiff);
+                if (equipDiff) { }
+                Logger.Debug("Checking [{this}] equip data as human from draw obj, result: {diff}", this, equipDiff);
             }
             else
             {
                 equipDiff = CompareAndUpdateEquipByteData((byte*)Unsafe.AsPointer(ref chara->DrawData.EquipmentModelIds[0]));
-                if (equipDiff){}
-                    Logger.Debug("Checking [{this}] equip data from game obj, result: {diff}", this, equipDiff);
+                if (equipDiff) { }
+                Logger.Debug("Checking [{this}] equip data from game obj, result: {diff}", this, equipDiff);
             }
 
             if (equipDiff && !_isOwnedObject && !_ignoreSendAfterRedraw) // send the message out immediately and cancel out, no reason to continue if not self
@@ -260,14 +260,14 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
                 var tribeId = ((Human*)DrawObjectAddress)->Customize.Tribe;
 
                 customizeDiff = CompareAndUpdateCustomizeData(((Human*)DrawObjectAddress)->Customize.Data);
-                if (customizeDiff){}
-                    Logger.Debug("Checking [{this}] customize data as human from draw obj, result: {diff}", this, customizeDiff);
+                if (customizeDiff) { }
+                Logger.Debug("Checking [{this}] customize data as human from draw obj, result: {diff}", this, customizeDiff);
             }
             else
             {
                 customizeDiff = CompareAndUpdateCustomizeData(chara->DrawData.CustomizeData.Data);
-                if (customizeDiff){}
-                    Logger.Debug("Checking [{this}] customize data from game obj, result: {diff}", this, equipDiff);
+                if (customizeDiff) { }
+                Logger.Debug("Checking [{this}] customize data from game obj, result: {diff}", this, equipDiff);
             }
 
             if ((addrDiff || drawObjDiff || equipDiff || customizeDiff || nameChange) && _isOwnedObject)
@@ -379,36 +379,43 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
 
     private bool IsBeingDrawn()
     {
-        var curPtr = _getAddress();
-        Logger.Debug("[{this}] IsBeingDrawn, CurPtr: {ptr}", this, curPtr.ToString("X"));
-
-        if (curPtr == IntPtr.Zero && _ptrNullCounter < 2)
+        try
         {
-            Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, counter is {cnt}", this, _ptrNullCounter);
-            _ptrNullCounter++;
-            return true;
-        }
+            var curPtr = _getAddress();
+            Logger.Debug("[{this}] IsBeingDrawn, CurPtr: {ptr}", this, curPtr.ToString("X"));
 
-        if (curPtr == IntPtr.Zero)
+            if (curPtr == IntPtr.Zero && _ptrNullCounter < 2)
+            {
+                Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, counter is {cnt}", this, _ptrNullCounter);
+                _ptrNullCounter++;
+                return true;
+            }
+
+            if (curPtr == IntPtr.Zero)
+            {
+                Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, returning", this);
+
+                Address = IntPtr.Zero;
+                DrawObjectAddress = IntPtr.Zero;
+                throw new ArgumentNullException($"CurPtr for {this} turned ZERO");
+            }
+
+            if (_dalamudUtil.IsAnythingDrawing)
+            {
+                Logger.Debug("[{this}] IsBeingDrawn, Global draw block", this);
+                return true;
+            }
+
+            var drawObj = GetDrawObjUnsafe(curPtr);
+            Logger.Debug("[{this}] IsBeingDrawn, DrawObjPtr: {ptr}", this, drawObj.ToString("X"));
+            var isDrawn = IsBeingDrawnUnsafe(drawObj, curPtr);
+            Logger.Debug("[{this}] IsBeingDrawn, Condition: {cond}", this, isDrawn);
+            return isDrawn != DrawCondition.None;
+        }
+        catch
         {
-            Logger.Debug("[{this}] IsBeingDrawn, CurPtr is ZERO, returning", this);
-
-            Address = IntPtr.Zero;
-            DrawObjectAddress = IntPtr.Zero;
-            throw new ArgumentNullException($"CurPtr for {this} turned ZERO");
+            return false;
         }
-
-        if (_dalamudUtil.IsAnythingDrawing)
-        {
-            Logger.Debug("[{this}] IsBeingDrawn, Global draw block", this);
-            return true;
-        }
-
-        var drawObj = GetDrawObjUnsafe(curPtr);
-        Logger.Debug("[{this}] IsBeingDrawn, DrawObjPtr: {ptr}", this, drawObj.ToString("X"));
-        var isDrawn = IsBeingDrawnUnsafe(drawObj, curPtr);
-        Logger.Debug("[{this}] IsBeingDrawn, Condition: {cond}", this, isDrawn);
-        return isDrawn != DrawCondition.None;
     }
 
     private unsafe DrawCondition IsBeingDrawnUnsafe(IntPtr drawObj, IntPtr curPtr)
