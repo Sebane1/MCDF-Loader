@@ -83,6 +83,10 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
         return true;
     }
+    public void CreateMCDF(string path)
+    {
+        _mareCharaFileManager.SaveMareCharaFile("Quest Reborn MCDF", path);
+    }
     public bool IsWorking()
     {
         return _mareCharaFileManager.CurrentlyWorking;

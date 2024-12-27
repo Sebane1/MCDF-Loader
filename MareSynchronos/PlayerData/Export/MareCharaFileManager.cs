@@ -45,7 +45,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         _dalamudUtil = dalamudUtil;
         _gposeGameObjects = [];
         _gposeCustomizeObjects = [];
-        Mediator.Subscribe<PlayerChangedMessage>(this, (x) => PlayerManagerOnPlayerHasChanged(x.Data));
+        Mediator.Subscribe<CharacterDataCreatedMessage>(this, (x) => PlayerManagerOnPlayerHasChanged(x.CharacterData));
         Mediator.Subscribe<GposeStartMessage>(this, _ => _isInGpose = true);
         Mediator.Subscribe<GposeEndMessage>(this, async _ =>
         {
