@@ -31,7 +31,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private int _globalFileCounter = 0;
     private bool _isInGpose = true;
     private CharacterData _characterData;
-
+    Dictionary<string, Tuple<Guid, Guid>> pastCollections = new Dictionary<string, Tuple<Guid, Guid>>();
     public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
         McdfMediator mediator) : base(mediator)
@@ -89,6 +89,13 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     }
                 }
                 var applicationId = Guid.NewGuid();
+
+                if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+                {
+                    var data = pastCollections[charaTarget.Name.TextValue];
+                    await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(data.Item1, data.Item2).ConfigureAwait(false);
+                }
+
                 var coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
                 await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaTarget.ObjectIndex).ConfigureAwait(false);
                 await _ipcManager.Penumbra.SetTemporaryModsAsync(applicationId, coll, extractedFiles.Union(fileSwaps).ToDictionary(d => d.Key, d => d.Value, StringComparer.Ordinal)).ConfigureAwait(false);
@@ -102,8 +109,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
                 await _ipcManager.Glamourer.ApplyAllAsync(tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
                 await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
-                _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
-                //await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync( applicationId, coll).ConfigureAwait(false);
+                //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
                 {
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
@@ -114,6 +120,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
                     _gposeCustomizeObjects.Add(id);
                 }
+                pastCollections[charaTarget.Name.TextValue] = new Tuple<Guid, Guid>(applicationId, coll);
             }
         }
         catch (Exception ex)
