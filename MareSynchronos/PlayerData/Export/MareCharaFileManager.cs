@@ -63,10 +63,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     {
         if (charaTarget == null) return;
         Dictionary<string, string> extractedFiles = new(StringComparer.Ordinal);
-        while (CurrentlyWorking)
-        {
-            await Task.Delay(500);
-        }
         CurrentlyWorking = true;
         try
         {
@@ -132,7 +128,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            _Logger.Warning(ex, "Failure to read MCDF");
+            _Logger.Warning(ex, "Failure to read MCDF, trying again");
+            ApplyMareCharaFile(charaTarget, expectedLength, loadedCharaFile);
             throw;
         }
         finally
