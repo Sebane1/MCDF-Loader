@@ -79,7 +79,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 using var reader = new BinaryReader(lz4Stream);
                 MareCharaFileHeader.AdvanceReaderToData(reader);
                 _Logger.Debug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
-                extractedFiles = ExtractFilesFromCharaFile(loadedCharaFile, reader, expectedLength);
+                extractedFiles = ExtractFilesFromCharaFile(charaTarget.Name.TextValue, loadedCharaFile, reader, expectedLength);
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
                 foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
                 {
@@ -109,7 +109,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
                 await _ipcManager.Glamourer.ApplyAllAsync(tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
                 await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
-                //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
+                _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
                 {
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
@@ -228,14 +228,16 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         finally { CurrentlyWorking = false; }
     }
 
-    private Dictionary<string, string> ExtractFilesFromCharaFile(MareCharaFileHeader charaFileHeader, BinaryReader reader, long expectedLength)
+    private Dictionary<string, string> ExtractFilesFromCharaFile(string fileId, MareCharaFileHeader charaFileHeader, BinaryReader reader, long expectedLength)
     {
         long totalRead = 0;
         Dictionary<string, string> gamePathToFilePath = new(StringComparer.Ordinal);
         foreach (var fileData in charaFileHeader.CharaFileData.Files)
         {
-            var fileName = Path.Combine(McdfAccessUtils.CacheLocation, "mare_" + _globalFileCounter++ + ".tmp");
+            var fileName = Path.Combine(McdfAccessUtils.CacheLocation, fileId + "_mcdf_" + _globalFileCounter++ + ".tmp");
             var length = fileData.Length;
+            //if (!File.Exists(fileName))
+            //{
             var bufferSize = length;
             using var fs = File.OpenWrite(fileName);
             using var wr = new BinaryWriter(fs);
@@ -250,6 +252,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 gamePathToFilePath[path] = fileName;
                 _Logger.Debug("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
             }
+            //}
             totalRead += length;
             _Logger.Debug("Read {read}/{expected} bytes", totalRead.ToByteString(), expectedLength.ToByteString());
         }
