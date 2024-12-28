@@ -92,8 +92,15 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
                 if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
                 {
-                    var data = pastCollections[charaTarget.Name.TextValue];
-                    await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(data.Item1, data.Item2).ConfigureAwait(false);
+                    try
+                    {
+                        var data = pastCollections[charaTarget.Name.TextValue];
+                        await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(data.Item1, data.Item2).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+
+                    }
                 }
 
                 var coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
