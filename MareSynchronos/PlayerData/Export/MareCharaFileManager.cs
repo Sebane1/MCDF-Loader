@@ -31,6 +31,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private int _globalFileCounter = 0;
     private bool _isInGpose = true;
     private CharacterData _characterData;
+    public event EventHandler<Tuple<IGameObject, long, MareCharaFileHeader>> OnMcdfFailed;
     Dictionary<string, Tuple<Guid, Guid>> pastCollections = new Dictionary<string, Tuple<Guid, Guid>>();
     public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
@@ -128,20 +129,18 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            _Logger.Warning(ex, "Failure to read MCDF, trying again");
-            ApplyMareCharaFile(charaTarget, expectedLength, loadedCharaFile);
-            throw;
+            _Logger.Warning(ex, "Failure to read MCDF");
+            OnMcdfFailed?.Invoke(this, new Tuple<IGameObject, long, MareCharaFileHeader>(charaTarget, expectedLength, loadedCharaFile));
         }
         finally
         {
-            CurrentlyWorking = false;
-
             _Logger.Debug("Clearing local files");
             ////foreach (var file in Directory.EnumerateFiles(CachePath.CacheLocation, "*.tmp"))
             ////{
             ////    File.Delete(file);
             ////}
         }
+        CurrentlyWorking = false;
     }
 
     public Tuple<long, MareCharaFileHeader> LoadMareCharaFile(string filePath)
