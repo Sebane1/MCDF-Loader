@@ -106,7 +106,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 await _ipcManager.Penumbra.SetManipulationDataAsync(applicationId, coll, loadedCharaFile.CharaFileData.ManipulationData).ConfigureAwait(false);
 
                 GameObjectHandler tempHandler = await _gameObjectHandlerFactory.Create(ObjectKind.Player,
-                    () => _dalamudUtil.GetGposeCharacterFromObjectTableByName(charaTarget.Name.ToString(), _isInGpose)?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
+                    () => _dalamudUtil.GetGposeCharacterFromObjectTableByName(charaTarget.Name.ToString(), false)?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
 
                 if (!_gposeGameObjects.ContainsKey(charaTarget.Name.ToString()))
                     _gposeGameObjects[charaTarget.Name.ToString()] = tempHandler;
