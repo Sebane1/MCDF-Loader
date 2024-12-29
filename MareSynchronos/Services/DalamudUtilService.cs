@@ -38,7 +38,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     private readonly List<string> _notUpdatedCharas = [];
     private bool _sentBetweenAreas = false;
 
-    public DalamudUtilService( IClientState clientState, IObjectTable objectTable, IFramework framework,
+    public DalamudUtilService(IClientState clientState, IObjectTable objectTable, IFramework framework,
         IGameGui gameGui, ICondition condition, IDataManager gameData, ITargetManager targetManager, McdfMediator mediator, PerformanceCollectorService performanceCollector)
     {
         _performanceCollector = performanceCollector;
@@ -113,11 +113,11 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         return await RunOnFrameworkThread(() => GetCompanion(playerPointer)).ConfigureAwait(false);
     }
 
-    public Dalamud.Game.ClientState.Objects.Types.ICharacter? GetGposeCharacterFromObjectTableByName(string name, bool onlyGposeCharacters = false)
+    public Dalamud.Game.ClientState.Objects.Types.ICharacter? GetCharacterFromObjectTableByName(string name)
     {
         EnsureIsOnFramework();
         return (Dalamud.Game.ClientState.Objects.Types.ICharacter?)_objectTable
-            .FirstOrDefault(i => (!onlyGposeCharacters || i.ObjectIndex >= 200) && string.Equals(i.Name.ToString(), name, StringComparison.Ordinal));
+            .FirstOrDefault(i => string.Equals(i.Name.ToString(), name, StringComparison.Ordinal));
     }
 
     public bool GetIsPlayerPresent()
@@ -300,7 +300,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         return Task.CompletedTask;
     }
 
-    public async Task WaitWhileCharacterIsDrawing( GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
+    public async Task WaitWhileCharacterIsDrawing(GameObjectHandler handler, Guid redrawId, int timeOut = 5000, CancellationToken? ct = null)
     {
         if (!_clientState.IsLoggedIn) return;
 

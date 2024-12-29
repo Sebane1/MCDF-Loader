@@ -23,8 +23,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private readonly DalamudUtilService _dalamudUtil;
     private readonly MareCharaFileDataFactory _factory;
     private readonly GameObjectHandlerFactory _gameObjectHandlerFactory;
-    private readonly Dictionary<string, GameObjectHandler> _gposeGameObjects;
-    private readonly List<Guid?> _gposeCustomizeObjects;
     private readonly IpcManager _ipcManager;
     private readonly IPluginLog _Logger;
     private readonly FileCacheManager _manager;
@@ -44,8 +42,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         _ipcManager = ipcManager;
         _configService = configService;
         _dalamudUtil = dalamudUtil;
-        _gposeGameObjects = [];
-        _gposeCustomizeObjects = [];
         Mediator.Subscribe<CharacterDataCreatedMessage>(this, (x) => PlayerManagerOnPlayerHasChanged(x.CharacterData));
         Mediator.Subscribe<GposeStartMessage>(this, _ => _isInGpose = true);
         Mediator.Subscribe<GposeEndMessage>(this, async _ =>
@@ -106,23 +102,18 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 await _ipcManager.Penumbra.SetManipulationDataAsync(applicationId, coll, loadedCharaFile.CharaFileData.ManipulationData).ConfigureAwait(false);
 
                 GameObjectHandler tempHandler = await _gameObjectHandlerFactory.Create(ObjectKind.Player,
-                    () => _dalamudUtil.GetGposeCharacterFromObjectTableByName(charaTarget.Name.ToString(), false)?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
+                    () => _dalamudUtil.GetCharacterFromObjectTableByName(charaTarget.Name.ToString())?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
 
-                if (!_gposeGameObjects.ContainsKey(charaTarget.Name.ToString()))
-                    _gposeGameObjects[charaTarget.Name.ToString()] = tempHandler;
-
-                await _ipcManager.Glamourer.ApplyAllAsync(tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
+                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
                 await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                 _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
                 {
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
-                    _gposeCustomizeObjects.Add(id);
                 }
                 else
                 {
                     var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
-                    _gposeCustomizeObjects.Add(id);
                 }
                 pastCollections[charaTarget.Name.TextValue] = new Tuple<Guid, Guid>(applicationId, coll);
             }

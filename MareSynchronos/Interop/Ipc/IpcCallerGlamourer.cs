@@ -31,8 +31,8 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private bool _shownGlamourerUnavailable = false;
     private readonly uint LockCode = 0x6D617265;
 
-    public IpcCallerGlamourer( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
-        RedrawManager redrawManager) : base( mareMediator)
+    public IpcCallerGlamourer(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
+        RedrawManager redrawManager) : base(mareMediator)
     {
         _glamourerApiVersions = new ApiVersion(pi);
         _glamourerGetAllCustomization = new GetStateBase64(pi);
@@ -98,13 +98,13 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
             if (!apiAvailable && !_shownGlamourerUnavailable)
             {
                 _shownGlamourerUnavailable = true;
-                _mareMediator.Publish(new NotificationMessage("Glamourer inactive", "Your Glamourer installation is not active or out of date. Update Glamourer to continue to use Mare. If you just updated Glamourer, ignore this message.",
+                _mareMediator.Publish(new NotificationMessage("Glamourer inactive", "Your Glamourer installation is not active or out of date. Update Glamourer to continue to use MCDF Loader. If you just updated Glamourer, ignore this message.",
                     NotificationType.Error));
             }
         }
     }
 
-    public async Task ApplyAllAsync( GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
+    public async Task ApplyAllAsync(IGameObject gameObject, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool fireAndForget = false)
     {
         if (!APIAvailable || string.IsNullOrEmpty(customization) || _dalamudUtil.IsZoning) return;
 
@@ -153,7 +153,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertAsync( string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
+    public async Task RevertAsync(string name, GameObjectHandler handler, Guid applicationId, CancellationToken token)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
         try
@@ -183,7 +183,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task RevertByNameAsync( string name, Guid applicationId)
+    public async Task RevertByNameAsync(string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 
@@ -194,7 +194,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }).ConfigureAwait(false);
     }
 
-    public void RevertByName( string name, Guid applicationId)
+    public void RevertByName(string name, Guid applicationId)
     {
         if ((!APIAvailable) || _dalamudUtil.IsZoning) return;
 
