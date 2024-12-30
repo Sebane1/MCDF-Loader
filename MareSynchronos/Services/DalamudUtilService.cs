@@ -416,7 +416,14 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
     private void FrameworkOnUpdate(IFramework framework)
     {
-        _performanceCollector.LogPerformance(this, $"FrameworkOnUpdate", FrameworkOnUpdateInternal);
+        try
+        {
+            _performanceCollector.LogPerformance(this, $"FrameworkOnUpdate", FrameworkOnUpdateInternal);
+        }
+        catch
+        {
+
+        }
     }
 
     private unsafe void FrameworkOnUpdateInternal()
