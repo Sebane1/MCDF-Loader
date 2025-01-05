@@ -19,7 +19,7 @@ namespace McdfDataImporter
                 if (!string.IsNullOrEmpty(value) && (!value.Contains("Program Files")
                  || !value.Contains("FINAL FANTASY XIV - A Realm Reborn")))
                 {
-                    _cacheLocation = Path.Combine(Path.GetDirectoryName(value + ".poop"), "QuestCache\\");
+                    _cacheLocation = value;
                 }
             }
         }
