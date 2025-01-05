@@ -273,28 +273,35 @@ public sealed class FileCacheManager : IHostedService
 
     public void WriteOutFullCsv()
     {
-        lock (_fileWriteLock)
+        try
         {
-            StringBuilder sb = new();
-            foreach (var entry in _fileCaches.SelectMany(k => k.Value).OrderBy(f => f.PrefixedFilePath, StringComparer.OrdinalIgnoreCase))
+            lock (_fileWriteLock)
             {
-                sb.AppendLine(entry.CsvEntry);
-            }
+                StringBuilder sb = new();
+                foreach (var entry in _fileCaches.SelectMany(k => k.Value).OrderBy(f => f.PrefixedFilePath, StringComparer.OrdinalIgnoreCase))
+                {
+                    sb.AppendLine(entry.CsvEntry);
+                }
 
-            if (File.Exists(CsvPath))
-            {
-                File.Copy(CsvPath, CsvBakPath, overwrite: true);
-            }
+                if (File.Exists(CsvPath))
+                {
+                    File.Copy(CsvPath, CsvBakPath, overwrite: true);
+                }
 
-            try
-            {
-                File.WriteAllText(CsvPath, sb.ToString());
-                File.Delete(CsvBakPath);
+                try
+                {
+                    File.WriteAllText(CsvPath, sb.ToString());
+                    File.Delete(CsvBakPath);
+                }
+                catch
+                {
+                    File.WriteAllText(CsvBakPath, sb.ToString());
+                }
             }
-            catch
-            {
-                File.WriteAllText(CsvBakPath, sb.ToString());
-            }
+        }
+        catch
+        {
+
         }
     }
 
