@@ -32,6 +32,7 @@ public sealed class XivDataAnalyzer
     {
         if (handler.Address == nint.Zero) return null;
         var chara = (CharacterBase*)(((Character*)handler.Address)->GameObject.DrawObject);
+        if (chara == null) return null;
         if (chara->GetModelType() != CharacterBase.ModelType.Human) return null;
         var resHandles = chara->Skeleton->SkeletonResourceHandles;
         Dictionary<string, List<ushort>> outputIndices = [];
