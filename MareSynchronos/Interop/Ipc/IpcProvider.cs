@@ -50,6 +50,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     public async void Dispose()
     {
         await StopAsync(CancellationToken.None);
+        RemoveAllTemporaryCollections();
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -91,7 +92,10 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         return _mareCharaFileManager.CurrentlyWorking;
     }
-
+    public void RemoveAllTemporaryCollections()
+    {
+        _mareCharaFileManager.RemoveAllTemporaryCollections();
+    }
     private async Task ApplyFileAsync(string path, IGameObject target)
     {
         try

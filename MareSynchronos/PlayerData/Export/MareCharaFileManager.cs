@@ -30,7 +30,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private bool _isInGpose = true;
     private CharacterData _characterData;
     public event EventHandler<Tuple<IGameObject, long, MareCharaFileHeader>> OnMcdfFailed;
-    Dictionary<string, Tuple<Guid, Guid>> pastCollections = new Dictionary<string, Tuple<Guid, Guid>>();
+    Dictionary<string, EventHandler> pastCollections = new Dictionary<string, EventHandler>();
     public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
         McdfMediator mediator) : base(mediator)
@@ -83,19 +83,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 }
                 var applicationId = Guid.NewGuid();
 
-                if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
-                {
-                    try
-                    {
-                        var data = pastCollections[charaTarget.Name.TextValue];
-                        await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(data.Item1, data.Item2).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-
-                    }
-                }
-
                 var coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
                 await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaTarget.ObjectIndex).ConfigureAwait(false);
                 await _ipcManager.Penumbra.SetTemporaryModsAsync(applicationId, coll, extractedFiles.Union(fileSwaps).ToDictionary(d => d.Key, d => d.Value, StringComparer.Ordinal)).ConfigureAwait(false);
@@ -107,15 +94,22 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
                 await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                 _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
+                Guid? id = Guid.NewGuid();
                 if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
                 {
-                    var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
+                    id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
                 }
                 else
                 {
-                    var id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
+                    id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
                 }
-                pastCollections[charaTarget.Name.TextValue] = new Tuple<Guid, Guid>(applicationId, coll);
+                string name = charaTarget.Name.TextValue;
+                pastCollections[charaTarget.Name.TextValue] = async delegate
+                {
+                    await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
+                    await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
+                    await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
+                };
             }
         }
         catch (Exception ex)
@@ -126,14 +120,21 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         finally
         {
             _Logger.Debug("Clearing local files");
-            ////foreach (var file in Directory.EnumerateFiles(CachePath.CacheLocation, "*.tmp"))
-            ////{
-            ////    File.Delete(file);
-            ////}
         }
         CurrentlyWorking = false;
     }
-
+    public async void RemoveAllTemporaryCollections()
+    {
+        Task.Run(() =>
+        {
+            foreach (var item in pastCollections)
+            {
+                item.Value.Invoke(this, EventArgs.Empty);
+                Thread.Sleep(200);
+            }
+            pastCollections.Clear();
+        });
+    }
     public Tuple<long, MareCharaFileHeader> LoadMareCharaFile(string filePath)
     {
         CurrentlyWorking = true;
@@ -230,23 +231,30 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         {
             var fileName = Path.Combine(McdfAccessUtils.CacheLocation, fileId + "_mcdf_" + _globalFileCounter++ + ".tmp");
             var length = fileData.Length;
-            //if (!File.Exists(fileName))
-            //{
-            var bufferSize = length;
-            using var fs = File.OpenWrite(fileName);
-            using var wr = new BinaryWriter(fs);
-            _Logger.Debug("Reading {length} of {fileName}", length.ToByteString(), fileName);
-            var buffer = reader.ReadBytes(bufferSize);
-            wr.Write(buffer);
-            wr.Flush();
-            wr.Close();
-            if (buffer.Length == 0) throw new EndOfStreamException("Unexpected EOF");
-            foreach (var path in fileData.GamePaths)
+            if (!File.Exists(fileName))
             {
-                gamePathToFilePath[path] = fileName;
-                _Logger.Debug("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
+                try
+                {
+                    var bufferSize = length;
+                    using var fs = File.OpenWrite(fileName);
+                    using var wr = new BinaryWriter(fs);
+                    _Logger.Debug("Reading {length} of {fileName}", length.ToByteString(), fileName);
+                    var buffer = reader.ReadBytes(bufferSize);
+                    wr.Write(buffer);
+                    wr.Flush();
+                    wr.Close();
+                    if (buffer.Length == 0) throw new EndOfStreamException("Unexpected EOF");
+                    foreach (var path in fileData.GamePaths)
+                    {
+                        gamePathToFilePath[path] = fileName;
+                        _Logger.Debug("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
+                    }
+                }
+                catch
+                {
+
+                }
             }
-            //}
             totalRead += length;
             _Logger.Debug("Read {read}/{expected} bytes", totalRead.ToByteString(), expectedLength.ToByteString());
         }
