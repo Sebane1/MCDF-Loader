@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
+using Lumina.Excel.Sheets;
 using LZ4;
 using MareSynchronos.API.Data.Enum;
 using MareSynchronos.FileCache;
@@ -12,6 +13,7 @@ using MareSynchronos.Services.Mediator;
 using MareSynchronos.Utils;
 using McdfDataImporter;
 using Microsoft.Extensions.Logging;
+using RoleplayingVoiceDalamud.Glamourer;
 using System.Text;
 using CharacterData = MareSynchronos.API.Data.CharacterData;
 
@@ -56,8 +58,14 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
     public bool CurrentlyWorking { get; private set; } = false;
 
-    public async Task ApplyMareCharaFile(IGameObject? charaTarget, long expectedLength, MareCharaFileHeader loadedCharaFile)
+    public async Task ApplyMareCharaFile(IGameObject? charaTarget, long expectedLength, MareCharaFileHeader loadedCharaFile, int mcdfApplicationType)
     {
+        var playerCharaFileData = _factory.Create("description", _characterData);
+        var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+        var applicationType = (AppearanceSwapType)mcdfApplicationType;
+        bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
+            || applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
+               applicationType == AppearanceSwapType.PreserveRace;
         if (charaTarget == null) return;
         Dictionary<string, string> extractedFiles = new(StringComparer.Ordinal);
         CurrentlyWorking = true;
@@ -74,41 +82,85 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 _Logger.Debug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
                 extractedFiles = ExtractFilesFromCharaFile(charaTarget.Name.TextValue, loadedCharaFile, reader, expectedLength);
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
-                foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
-                {
-                    foreach (var path in fileSwap.GamePaths)
-                    {
-                        fileSwaps.Add(path, fileSwap.FileSwapPath);
-                    }
-                }
                 var applicationId = Guid.NewGuid();
+                var coll = Guid.NewGuid();
 
-                var coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
-                await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaTarget.ObjectIndex).ConfigureAwait(false);
-                await _ipcManager.Penumbra.SetTemporaryModsAsync(applicationId, coll, extractedFiles.Union(fileSwaps).ToDictionary(d => d.Key, d => d.Value, StringComparer.Ordinal)).ConfigureAwait(false);
-                await _ipcManager.Penumbra.SetManipulationDataAsync(applicationId, coll, loadedCharaFile.CharaFileData.ManipulationData).ConfigureAwait(false);
-
+                if (applicationType == AppearanceSwapType.EntireAppearance)
+                {
+                    foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
+                    {
+                        foreach (var path in fileSwap.GamePaths)
+                        {
+                            fileSwaps.Add(path, fileSwap.FileSwapPath);
+                        }
+                    }
+                    coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
+                    await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaTarget.ObjectIndex).ConfigureAwait(false);
+                    await _ipcManager.Penumbra.SetTemporaryModsAsync(applicationId, coll, extractedFiles.Union(fileSwaps).ToDictionary(d => d.Key, d => d.Value, StringComparer.Ordinal)).ConfigureAwait(false);
+                    await _ipcManager.Penumbra.SetManipulationDataAsync(applicationId, coll, loadedCharaFile.CharaFileData.ManipulationData).ConfigureAwait(false);
+                }
                 GameObjectHandler tempHandler = await _gameObjectHandlerFactory.Create(ObjectKind.Player,
                     () => _dalamudUtil.GetCharacterFromObjectTableByName(charaTarget.Name.ToString())?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
 
-                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, loadedCharaFile.CharaFileData.GlamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
-                await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
-                _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
-                Guid? id = Guid.NewGuid();
-                if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
+                if (glamourerCanBeApplied)
                 {
-                    id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
+                    string glamourerData = loadedCharaFile.CharaFileData.GlamourerData;
+
+                    if (applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
+                        applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveRace)
+                    {
+                        var mcdfCustomization = CharacterCustomization.ReadCustomization(glamourerData);
+                        var customizeData = mcdfCustomization.Customize;
+                        if (applicationType == AppearanceSwapType.PreserveAllPhysicalTraits)
+                        {
+                            mcdfCustomization.Customize = playerCustomization.Customize;
+                        }
+                        else if (applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity)
+                        {
+                            mcdfCustomization.Customize.Gender = playerCustomization.Customize.Gender;
+                        }
+                        else if (applicationType == AppearanceSwapType.PreserveRace)
+                        {
+                            mcdfCustomization.Customize.Race = playerCustomization.Customize.Race;
+                            mcdfCustomization.Customize.SkinColor = playerCustomization.Customize.SkinColor;
+                            mcdfCustomization.Customize.Face = playerCustomization.Customize.Face;
+                        }
+                        glamourerData = mcdfCustomization.ToBase64();
+                    }
+
+                    await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
+                    await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
+                    _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 }
-                else
+
+                Guid? id = Guid.NewGuid();
+                if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
                 {
-                    id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
+                    if (!string.IsNullOrEmpty(loadedCharaFile.CharaFileData.CustomizePlusData))
+                    {
+                        id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, loadedCharaFile.CharaFileData.CustomizePlusData).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
+                    }
                 }
                 string name = charaTarget.Name.TextValue;
                 pastCollections[charaTarget.Name.TextValue] = async delegate
                 {
-                    await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
-                    await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
-                    await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
+                    if (applicationType == AppearanceSwapType.EntireAppearance)
+                    {
+                        await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
+                    }
+                    if (glamourerCanBeApplied)
+                    {
+                        await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
+                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, playerCharaFileData.GlamourerData, applicationId, disposeCts.Token, true);
+                    }
+                    if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
+                    {
+                        await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
+                    }
                 };
             }
         }
@@ -133,6 +185,17 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 Thread.Sleep(200);
             }
             pastCollections.Clear();
+        });
+    }
+    public async void RemoveTemporaryCollection(string name)
+    {
+        Task.Run(() =>
+        {
+            if (pastCollections.ContainsKey(name))
+            {
+                pastCollections[name].Invoke(this, EventArgs.Empty);
+                pastCollections.Remove(name);
+            }
         });
     }
     public Tuple<long, MareCharaFileHeader> LoadMareCharaFile(string filePath)
@@ -260,5 +323,15 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
 
         return gamePathToFilePath;
+    }
+    public enum AppearanceSwapType
+    {
+        EntireAppearance = 0,
+        RevertAppearance = 1,
+        PreserveRace = 2,
+        PreserveMasculinityAndFemininity = 3,
+        PreserveAllPhysicalTraits = 4,
+        OnlyGlamourerData = 5,
+        OnlyCustomizeData = 6
     }
 }

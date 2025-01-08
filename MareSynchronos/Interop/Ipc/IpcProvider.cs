@@ -18,7 +18,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     private readonly IDalamudPluginInterface _pi;
     private readonly MareCharaFileManager _mareCharaFileManager;
     private readonly DalamudUtilService _dalamudUtil;
-    private ICallGateProvider<string, IGameObject, bool>? _loadFileProvider;
+    private ICallGateProvider<string, IGameObject, int, bool>? _loadFileProvider;
     private ICallGateProvider<string, IGameObject, Task<bool>>? _loadFileAsyncProvider;
     private ICallGateProvider<List<nint>>? _handledGameAddresses;
     private readonly List<GameObjectHandler> _activeGameObjectHandlers = [];
@@ -54,7 +54,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, bool>("McdfStandalone.LoadMcdf");
+        _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, int, bool>("McdfStandalone.LoadMcdf");
         _loadFileProvider.RegisterFunc(LoadMcdf);
         _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfStandalone.LoadMcdfAsync");
         _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
@@ -78,9 +78,9 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         return true;
     }
 
-    public bool LoadMcdf(string path, IGameObject target)
+    public bool LoadMcdf(string path, IGameObject target, int appearanceSwap)
     {
-        _ = Task.Run(async () => await ApplyFileAsync(path, target).ConfigureAwait(false)).ConfigureAwait(false);
+        _ = Task.Run(async () => await ApplyFileAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
     }
@@ -96,7 +96,11 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         _mareCharaFileManager.RemoveAllTemporaryCollections();
     }
-    private async Task ApplyFileAsync(string path, IGameObject target)
+    public void RemoveTemporaryCollections(string name)
+    {
+        _mareCharaFileManager.RemoveTemporaryCollection(name);
+    }
+    private async Task ApplyFileAsync(string path, IGameObject target, int mcdfApplicationType = 0)
     {
         try
         {
@@ -105,7 +109,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             {
                 if (target != null)
                 {
-                    await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2).ConfigureAwait(false);
+                    await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2, mcdfApplicationType).ConfigureAwait(false);
                 }
             }
         }
