@@ -108,7 +108,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     }
                 }
 
-                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
+                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, applicationType == AppearanceSwapType.PreserveAllPhysicalTraits).ConfigureAwait(false);
                 //await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                 //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
             }
@@ -123,7 +123,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     await Task.Delay(1000);
                     if (charaTarget.ObjectIndex == 0)
                     {
-                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token, true);
+                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
                     }
                 }
             };
@@ -246,7 +246,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         await Task.Delay(1000);
                         if (charaTarget.ObjectIndex == 0)
                         {
-                            await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token, true);
+                            await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
                         }
                     }
                     if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
