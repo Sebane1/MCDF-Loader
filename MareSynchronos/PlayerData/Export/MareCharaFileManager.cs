@@ -62,10 +62,16 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     {
         var playerCharaFileData = _factory.Create("description", _characterData);
         var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+        var originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
         var applicationType = (AppearanceSwapType)mcdfApplicationType;
+
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
             || applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
                applicationType == AppearanceSwapType.PreserveRace;
+
+        bool penumbraCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance
+                    || (applicationType != AppearanceSwapType.OnlyGlamourerData && applicationType != AppearanceSwapType.OnlyCustomizeData);
+
         if (charaTarget == null) return;
         Dictionary<string, string> extractedFiles = new(StringComparer.Ordinal);
         CurrentlyWorking = true;
@@ -85,8 +91,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 var applicationId = Guid.NewGuid();
                 var coll = Guid.NewGuid();
 
-                if (applicationType == AppearanceSwapType.EntireAppearance 
-                    || (applicationType != AppearanceSwapType.OnlyGlamourerData && applicationType != AppearanceSwapType.OnlyCustomizeData))
+                if (penumbraCanBeApplied)
                 {
                     foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
                     {
@@ -125,6 +130,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         else if (applicationType == AppearanceSwapType.PreserveRace)
                         {
                             mcdfCustomization.Customize.Race = playerCustomization.Customize.Race;
+                            mcdfCustomization.Customize.Clan = playerCustomization.Customize.Clan;
                             mcdfCustomization.Customize.SkinColor = playerCustomization.Customize.SkinColor;
                             mcdfCustomization.Customize.Face = playerCustomization.Customize.Face;
                             glamourerData = mcdfCustomization.ToBase64();
@@ -151,14 +157,18 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 string name = charaTarget.Name.TextValue;
                 pastCollections[charaTarget.Name.TextValue] = async delegate
                 {
-                    if (applicationType == AppearanceSwapType.EntireAppearance)
+                    if (penumbraCanBeApplied)
                     {
                         await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
                     }
                     if (glamourerCanBeApplied)
                     {
                         await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
-                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, playerCharaFileData.GlamourerData, applicationId, disposeCts.Token, true);
+                        await Task.Delay(1000);
+                        if (charaTarget.ObjectIndex == 0)
+                        {
+                            await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token, true);
+                        }
                     }
                     if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
                     {

@@ -96,7 +96,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         _mareCharaFileManager.RemoveAllTemporaryCollections();
     }
-    public void RemoveTemporaryCollections(string name)
+    public void RemoveTemporaryCollection(string name)
     {
         _mareCharaFileManager.RemoveTemporaryCollection(name);
     }
