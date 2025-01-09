@@ -33,6 +33,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private CharacterData _characterData;
     public event EventHandler<Tuple<IGameObject, long, MareCharaFileHeader>> OnMcdfFailed;
     Dictionary<string, EventHandler> pastCollections = new Dictionary<string, EventHandler>();
+    Dictionary<string, string> pastAppearanceType = new Dictionary<string, string>();
     private bool _resettingOldAppearance;
     private string originalPlayerAppearanceString;
     private MareCharaFileData playerCharaFileData;
@@ -62,11 +63,17 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     }
 
     public bool CurrentlyWorking { get; private set; } = false;
-    public async Task ApplyStandaloneGlamourerString(IGameObject? charaTarget, string appearance, int apparanceApplicationType)
+    public async Task ApplyStandaloneGlamourerString(IGameObject? charaTarget, string appearance, int appearanceApplicationType)
     {
+        string pastAppearanceValue = "";
+        if (pastAppearanceType.ContainsKey(charaTarget.Name.TextValue))
+        {
+            pastAppearanceValue = pastAppearanceType[charaTarget.Name.TextValue];
+        }
+
         if (charaTarget.ObjectIndex == 0)
         {
-            if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+            if (pastCollections.ContainsKey(charaTarget.Name.TextValue) && pastAppearanceValue == "modded")
             {
                 _resettingOldAppearance = true;
                 pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
@@ -76,11 +83,15 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 }
                 pastCollections.Remove(charaTarget.Name.TextValue);
             }
-            playerCharaFileData = _factory.Create("description", _characterData);
-            playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
-            originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
+            else
+            {
+                playerCharaFileData = _factory.Create("description", _characterData);
+                playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+                originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
+            }
         }
-        var applicationType = (AppearanceSwapType)apparanceApplicationType;
+        pastAppearanceType[charaTarget.Name.TextValue] = "glamoured";
+        var applicationType = (AppearanceSwapType)appearanceApplicationType;
 
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
             || applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
@@ -144,6 +155,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 }
             }
             _resettingOldAppearance = false;
+            pastAppearanceType[charaTarget.Name.TextValue] = "";
+            pastCollections.Remove(charaTarget.Name.TextValue);
         };
         }
         catch (Exception ex)
@@ -159,20 +172,15 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     {
         if (charaTarget.ObjectIndex == 0)
         {
-            if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+            if (!pastCollections.ContainsKey(charaTarget.Name.TextValue))
             {
-                _resettingOldAppearance = true;
-                pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
-                while (_resettingOldAppearance)
-                {
-                    Thread.Sleep(1000);
-                }
-                pastCollections.Remove(charaTarget.Name.TextValue);
+                playerCharaFileData = _factory.Create("description", _characterData);
+                playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+                originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
             }
-            playerCharaFileData = _factory.Create("description", _characterData);
-            playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
-            originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
         }
+
+        pastAppearanceType[charaTarget.Name.TextValue] = "modded";
         var applicationType = (AppearanceSwapType)mcdfApplicationType;
 
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
@@ -284,6 +292,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
                     }
                     _resettingOldAppearance = false;
+                    pastAppearanceType[charaTarget.Name.TextValue] = "";
+                    pastCollections.Remove(charaTarget.Name.TextValue);
                 };
             }
         }
