@@ -72,7 +72,10 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         CurrentlyWorking = true;
         try
         {
-
+            if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+            {
+                pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
+            }
             CancellationTokenSource disposeCts = new();
             var applicationId = Guid.NewGuid();
             var coll = Guid.NewGuid();
@@ -169,7 +172,10 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
                 var applicationId = Guid.NewGuid();
                 var coll = Guid.NewGuid();
-
+                if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+                {
+                    pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
+                }
                 if (penumbraCanBeApplied)
                 {
                     foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
