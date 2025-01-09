@@ -85,7 +85,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 var applicationId = Guid.NewGuid();
                 var coll = Guid.NewGuid();
 
-                if (applicationType == AppearanceSwapType.EntireAppearance)
+                if (applicationType == AppearanceSwapType.EntireAppearance 
+                    || (applicationType != AppearanceSwapType.OnlyGlamourerData && applicationType != AppearanceSwapType.OnlyCustomizeData))
                 {
                     foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
                     {
@@ -114,18 +115,20 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         if (applicationType == AppearanceSwapType.PreserveAllPhysicalTraits)
                         {
                             mcdfCustomization.Customize = playerCustomization.Customize;
+                            glamourerData = mcdfCustomization.ToBase64();
                         }
                         else if (applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity)
                         {
                             mcdfCustomization.Customize.Gender = playerCustomization.Customize.Gender;
+                            glamourerData = mcdfCustomization.ToBase64();
                         }
                         else if (applicationType == AppearanceSwapType.PreserveRace)
                         {
                             mcdfCustomization.Customize.Race = playerCustomization.Customize.Race;
                             mcdfCustomization.Customize.SkinColor = playerCustomization.Customize.SkinColor;
                             mcdfCustomization.Customize.Face = playerCustomization.Customize.Face;
+                            glamourerData = mcdfCustomization.ToBase64();
                         }
-                        glamourerData = mcdfCustomization.ToBase64();
                     }
 
                     await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
