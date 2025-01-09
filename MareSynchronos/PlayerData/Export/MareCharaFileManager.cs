@@ -33,6 +33,9 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private CharacterData _characterData;
     public event EventHandler<Tuple<IGameObject, long, MareCharaFileHeader>> OnMcdfFailed;
     Dictionary<string, EventHandler> pastCollections = new Dictionary<string, EventHandler>();
+    private bool _resettingOldAppearance;
+    private string originalPlayerAppearanceString;
+
     public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
         FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
         McdfMediator mediator) : base(mediator)
@@ -59,9 +62,19 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     public bool CurrentlyWorking { get; private set; } = false;
     public async Task ApplyStandaloneGlamourerString(IGameObject? charaTarget, string appearance, int apparanceApplicationType)
     {
+        if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+        {
+            _resettingOldAppearance = true;
+            pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
+            while (_resettingOldAppearance)
+            {
+                Thread.Sleep(1000);
+            }
+            pastCollections.Remove(charaTarget.Name.TextValue);
+        }
         var playerCharaFileData = _factory.Create("description", _characterData);
         var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
-        var originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
+        originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
         var applicationType = (AppearanceSwapType)apparanceApplicationType;
 
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
@@ -72,10 +85,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         CurrentlyWorking = true;
         try
         {
-            if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
-            {
-                pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
-            }
             CancellationTokenSource disposeCts = new();
             var applicationId = Guid.NewGuid();
             var coll = Guid.NewGuid();
@@ -129,6 +138,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
                     }
                 }
+                _resettingOldAppearance = false;
             };
         }
         catch (Exception ex)
@@ -142,9 +152,19 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     }
     public async Task ApplyMareCharaFile(IGameObject? charaTarget, long expectedLength, MareCharaFileHeader loadedCharaFile, int mcdfApplicationType)
     {
+        if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
+        {
+            _resettingOldAppearance = true;
+            pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
+            while (_resettingOldAppearance)
+            {
+                Thread.Sleep(1000);
+            }
+            pastCollections.Remove(charaTarget.Name.TextValue);
+        }
         var playerCharaFileData = _factory.Create("description", _characterData);
         var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
-        var originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
+        originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
         var applicationType = (AppearanceSwapType)mcdfApplicationType;
 
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
@@ -172,10 +192,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
                 var applicationId = Guid.NewGuid();
                 var coll = Guid.NewGuid();
-                if (pastCollections.ContainsKey(charaTarget.Name.TextValue))
-                {
-                    pastCollections[charaTarget.Name.TextValue]?.Invoke(this, EventArgs.Empty);
-                }
                 if (penumbraCanBeApplied)
                 {
                     foreach (var fileSwap in loadedCharaFile.CharaFileData.FileSwaps)
@@ -259,6 +275,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     {
                         await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
                     }
+                    _resettingOldAppearance = false;
                 };
             }
         }
