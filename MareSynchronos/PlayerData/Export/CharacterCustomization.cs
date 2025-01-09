@@ -352,6 +352,8 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class CharacterCustomization
     {
+        private static byte version;
+
         public CharacterCustomization()
         {
             Equipment = new Equipment();
@@ -360,14 +362,14 @@ namespace RoleplayingVoiceDalamud.Glamourer
         public static CharacterCustomization ReadCustomization(string base64)
         {
             var bytes = System.Convert.FromBase64String(base64);
-            var version = bytes[0];
+            version = bytes[0];
             version = bytes.DecompressToString(out var decompressed);
             return JsonConvert.DeserializeObject<CharacterCustomization>(decompressed);
         }
 
         public string ToBase64()
         {
-            return System.Convert.ToBase64String(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(this)).Compress((byte)FileVersion));
+            return System.Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this)).Compress(version));
         }
         public int FileVersion { get; set; }
         public Equipment Equipment { get; set; }
