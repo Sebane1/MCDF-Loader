@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace McdfDataImporter
 {
-    public static class McdfAccessUtils
+    public static class AppearanceAccessUtils
     {
         private static string _cacheLocation = "";
         public static string CacheLocation
@@ -24,6 +24,6 @@ namespace McdfDataImporter
             }
         }
 
-        public static IpcProvider McdfManager { get; set; }
+        public static IpcProvider AppearanceManager { get; set; }
     }
 }

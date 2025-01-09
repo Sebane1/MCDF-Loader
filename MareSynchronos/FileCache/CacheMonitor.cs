@@ -127,7 +127,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             return;
         }
 
-        DriveInfo di = new(new DirectoryInfo(McdfAccessUtils.CacheLocation).Root.FullName);
+        DriveInfo di = new(new DirectoryInfo(AppearanceAccessUtils.CacheLocation).Root.FullName);
         StorageisNTFS = string.Equals("NTFS", di.DriveFormat, StringComparison.OrdinalIgnoreCase);
         //Logger.Information("Mare Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
 
@@ -394,14 +394,14 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
     public void RecalculateFileCacheSize(CancellationToken token)
     {
-        if (string.IsNullOrEmpty(McdfAccessUtils.CacheLocation) || !Directory.Exists(McdfAccessUtils.CacheLocation))
+        if (string.IsNullOrEmpty(AppearanceAccessUtils.CacheLocation) || !Directory.Exists(AppearanceAccessUtils.CacheLocation))
         {
             FileCacheSize = 0;
             return;
         }
 
         FileCacheSize = -1;
-        DriveInfo di = new(new DirectoryInfo(McdfAccessUtils.CacheLocation).Root.FullName);
+        DriveInfo di = new(new DirectoryInfo(AppearanceAccessUtils.CacheLocation).Root.FullName);
         try
         {
             FileCacheDriveFree = di.AvailableFreeSpace;
@@ -411,7 +411,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             //Logger.Warning(ex, "Could not determine drive size for Storage Folder {folder}", CachePath.CacheLocation);
         }
 
-        var files = Directory.EnumerateFiles(McdfAccessUtils.CacheLocation).Select(f => new FileInfo(f))
+        var files = Directory.EnumerateFiles(AppearanceAccessUtils.CacheLocation).Select(f => new FileInfo(f))
             .OrderBy(f => f.LastAccessTime).ToList();
         FileCacheSize = files
             .Sum(f =>
@@ -477,7 +477,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             penDirExists = false;
             //Logger.Warning("Penumbra directory is not set or does not exist.");
         }
-        if (string.IsNullOrEmpty(McdfAccessUtils.CacheLocation) || !Directory.Exists(McdfAccessUtils.CacheLocation))
+        if (string.IsNullOrEmpty(AppearanceAccessUtils.CacheLocation) || !Directory.Exists(AppearanceAccessUtils.CacheLocation))
         {
             cacheDirExists = false;
             //Logger.Warning("Mare Cache directory is not set or does not exist.");
@@ -514,7 +514,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             if (ct.IsCancellationRequested) return;
         }
 
-        var allCacheFiles = Directory.GetFiles(McdfAccessUtils.CacheLocation, "*.*", SearchOption.TopDirectoryOnly)
+        var allCacheFiles = Directory.GetFiles(AppearanceAccessUtils.CacheLocation, "*.*", SearchOption.TopDirectoryOnly)
                                 .AsParallel()
                                 .Where(f =>
                                 {
@@ -683,7 +683,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         {
             _configService.Current.InitialScanComplete = true;
             _configService.Save();
-            StartMareWatcher(McdfAccessUtils.CacheLocation);
+            StartMareWatcher(AppearanceAccessUtils.CacheLocation);
             StartPenumbraWatcher(penumbraDir);
         }
     }

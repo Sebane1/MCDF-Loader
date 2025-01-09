@@ -37,7 +37,7 @@ public sealed class FileCacheManager : IHostedService
 
     private string CsvBakPath => CsvPath + ".bak";
 
-    public string CsvPath => McdfAccessUtils.CacheLocation + "\\FileCache.csv";
+    public string CsvPath => AppearanceAccessUtils.CacheLocation + "\\FileCache.csv";
 
     public FileCacheEntity? CreateCacheEntry(string path)
     {
@@ -45,8 +45,8 @@ public sealed class FileCacheManager : IHostedService
         if (!fi.Exists) return null;
         _Logger.Debug("Creating cache entry for {path}", path);
         var fullName = fi.FullName.ToLowerInvariant();
-        if (!fullName.Contains(McdfAccessUtils.CacheLocation.ToLowerInvariant(), StringComparison.Ordinal)) return null;
-        string prefixedPath = fullName.Replace(McdfAccessUtils.CacheLocation.ToLowerInvariant(), CachePrefix + "\\", StringComparison.Ordinal).Replace("\\\\", "\\", StringComparison.Ordinal);
+        if (!fullName.Contains(AppearanceAccessUtils.CacheLocation.ToLowerInvariant(), StringComparison.Ordinal)) return null;
+        string prefixedPath = fullName.Replace(AppearanceAccessUtils.CacheLocation.ToLowerInvariant(), CachePrefix + "\\", StringComparison.Ordinal).Replace("\\\\", "\\", StringComparison.Ordinal);
         return CreateFileCacheEntity(fi, prefixedPath);
     }
 
@@ -139,7 +139,7 @@ public sealed class FileCacheManager : IHostedService
 
     public string GetCacheFilePath(string hash, string extension)
     {
-        return Path.Combine(McdfAccessUtils.CacheLocation, hash + "." + extension);
+        return Path.Combine(AppearanceAccessUtils.CacheLocation, hash + "." + extension);
     }
 
     public async Task<(string, byte[])> GetCompressedFileData(string fileHash, CancellationToken uploadToken)
@@ -185,7 +185,7 @@ public sealed class FileCacheManager : IHostedService
             var cleanedPaths = paths.Distinct(StringComparer.OrdinalIgnoreCase).ToDictionary(p => p,
                 p => p.Replace("/", "\\", StringComparison.OrdinalIgnoreCase)
                     .Replace(_ipcManager.Penumbra.ModDirectory!, _ipcManager.Penumbra.ModDirectory!.EndsWith('\\') ? PenumbraPrefix + '\\' : PenumbraPrefix, StringComparison.OrdinalIgnoreCase)
-                    .Replace(McdfAccessUtils.CacheLocation, McdfAccessUtils.CacheLocation.EndsWith('\\') ? CachePrefix + '\\' : CachePrefix, StringComparison.OrdinalIgnoreCase)
+                    .Replace(AppearanceAccessUtils.CacheLocation, AppearanceAccessUtils.CacheLocation.EndsWith('\\') ? CachePrefix + '\\' : CachePrefix, StringComparison.OrdinalIgnoreCase)
                     .Replace("\\\\", "\\", StringComparison.Ordinal),
                 StringComparer.OrdinalIgnoreCase);
 
@@ -371,7 +371,7 @@ public sealed class FileCacheManager : IHostedService
         }
         else if (fileCache.PrefixedFilePath.StartsWith(CachePrefix, StringComparison.OrdinalIgnoreCase))
         {
-            fileCache.SetResolvedFilePath(fileCache.PrefixedFilePath.Replace(CachePrefix, McdfAccessUtils.CacheLocation, StringComparison.Ordinal));
+            fileCache.SetResolvedFilePath(fileCache.PrefixedFilePath.Replace(CachePrefix, AppearanceAccessUtils.CacheLocation, StringComparison.Ordinal));
         }
 
         return fileCache;

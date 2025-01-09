@@ -57,7 +57,86 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     }
 
     public bool CurrentlyWorking { get; private set; } = false;
+    public async Task ApplyStandaloneGlamourerString(IGameObject? charaTarget, string appearance, int apparanceApplicationType)
+    {
+        var playerCharaFileData = _factory.Create("description", _characterData);
+        var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+        var originalPlayerAppearanceString = playerCharaFileData.GlamourerData;
+        var applicationType = (AppearanceSwapType)apparanceApplicationType;
 
+        bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
+            || applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
+               applicationType == AppearanceSwapType.PreserveRace;
+
+        if (charaTarget == null) return;
+        CurrentlyWorking = true;
+        try
+        {
+
+            CancellationTokenSource disposeCts = new();
+            var applicationId = Guid.NewGuid();
+            var coll = Guid.NewGuid();
+            GameObjectHandler tempHandler = await _gameObjectHandlerFactory.Create(ObjectKind.Player,
+                () => _dalamudUtil.GetCharacterFromObjectTableByName(charaTarget.Name.ToString())?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
+
+            if (glamourerCanBeApplied)
+            {
+                string glamourerData = appearance;
+
+                if (applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
+                    applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveRace)
+                {
+                    var appearanceCustomization = CharacterCustomization.ReadCustomization(glamourerData);
+                    var customizeData = appearanceCustomization.Customize;
+                    if (applicationType == AppearanceSwapType.PreserveAllPhysicalTraits)
+                    {
+                        appearanceCustomization.Customize = playerCustomization.Customize;
+                        glamourerData = appearanceCustomization.ToBase64();
+                    }
+                    else if (applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity)
+                    {
+                        appearanceCustomization.Customize.Gender = playerCustomization.Customize.Gender;
+                        glamourerData = appearanceCustomization.ToBase64();
+                    }
+                    else if (applicationType == AppearanceSwapType.PreserveRace)
+                    {
+                        appearanceCustomization.Customize.Race = playerCustomization.Customize.Race;
+                        appearanceCustomization.Customize.Clan = playerCustomization.Customize.Clan;
+                        appearanceCustomization.Customize.SkinColor = playerCustomization.Customize.SkinColor;
+                        appearanceCustomization.Customize.Face = playerCustomization.Customize.Face;
+                        glamourerData = appearanceCustomization.ToBase64();
+                    }
+                }
+
+                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
+                //await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
+                //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
+            }
+
+            Guid? id = Guid.NewGuid();
+            string name = charaTarget.Name.TextValue;
+            pastCollections[charaTarget.Name.TextValue] = async delegate
+            {
+                if (glamourerCanBeApplied)
+                {
+                    await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
+                    await Task.Delay(1000);
+                    if (charaTarget.ObjectIndex == 0)
+                    {
+                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token, true);
+                    }
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            _Logger.Warning(ex, "Failure to read glamourer string");
+        }
+        finally
+        {
+        }
+        CurrentlyWorking = false;
+    }
     public async Task ApplyMareCharaFile(IGameObject? charaTarget, long expectedLength, MareCharaFileHeader loadedCharaFile, int mcdfApplicationType)
     {
         var playerCharaFileData = _factory.Create("description", _characterData);
@@ -305,7 +384,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         Dictionary<string, string> gamePathToFilePath = new(StringComparer.Ordinal);
         foreach (var fileData in charaFileHeader.CharaFileData.Files)
         {
-            var fileName = Path.Combine(McdfAccessUtils.CacheLocation, fileId + "_mcdf_" + _globalFileCounter++ + ".tmp");
+            var fileName = Path.Combine(AppearanceAccessUtils.CacheLocation, fileId + "_mcdf_" + _globalFileCounter++ + ".tmp");
             var length = fileData.Length;
             if (!File.Exists(fileName))
             {

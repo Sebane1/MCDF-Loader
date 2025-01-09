@@ -45,7 +45,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             _activeGameObjectHandlers.Remove(msg.GameObjectHandler);
         });
         Task.Run(() => StartAsync(CancellationToken.None));
-        McdfAccessUtils.McdfManager = this;
+        AppearanceAccessUtils.AppearanceManager = this;
     }
     public async void Dispose()
     {
@@ -55,7 +55,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, int, bool>("McdfStandalone.LoadMcdf");
-        _loadFileProvider.RegisterFunc(LoadMcdf);
+        _loadFileProvider.RegisterFunc(LoadAppearance);
         _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfStandalone.LoadMcdfAsync");
         _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
         _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
@@ -74,13 +74,13 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public async Task<bool> LoadMcdfAsync(string path, IGameObject target)
     {
-        await ApplyFileAsync(path, target).ConfigureAwait(false);
+        await ApplyAppearanceAsync(path, target).ConfigureAwait(false);
         return true;
     }
 
-    public bool LoadMcdf(string path, IGameObject target, int appearanceSwap)
+    public bool LoadAppearance(string path, IGameObject target, int appearanceSwap)
     {
-        _ = Task.Run(async () => await ApplyFileAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
+        _ = Task.Run(async () => await ApplyAppearanceAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
     }
@@ -100,17 +100,24 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         _mareCharaFileManager.RemoveTemporaryCollection(name);
     }
-    private async Task ApplyFileAsync(string path, IGameObject target, int mcdfApplicationType = 0)
+    private async Task ApplyAppearanceAsync(string path, IGameObject target, int appearanceApplicationType = 0)
     {
         try
         {
-            var data = _mareCharaFileManager.LoadMareCharaFile(path);
-            if (data != null)
+            if (path.Length < 256)
             {
-                if (target != null)
+                var data = _mareCharaFileManager.LoadMareCharaFile(path);
+                if (data != null)
                 {
-                    await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2, mcdfApplicationType).ConfigureAwait(false);
+                    if (target != null)
+                    {
+                        await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
+                    }
                 }
+            }
+            else
+            {
+                _mareCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
             }
         }
         catch (Exception e)
