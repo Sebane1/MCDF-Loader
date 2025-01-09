@@ -118,7 +118,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
                 try
                 {
                     Logger.Debug("[{appid}] Calling on IPC: GlamourerApplyAll", applicationId);
-                    _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, 0, onlyEquipment ? Glamourer.Api.Enums.ApplyFlag.Equipment : Glamourer.Api.Enums.ApplyFlag.Customization | Glamourer.Api.Enums.ApplyFlag.Customization);
+                    _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, 0, onlyEquipment ? Glamourer.Api.Enums.ApplyFlag.Equipment : Glamourer.Api.Enums.ApplyFlag.Customization | Glamourer.Api.Enums.ApplyFlag.Equipment);
                 }
                 catch (Exception ex)
                 {
