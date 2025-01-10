@@ -9,6 +9,7 @@ using MareSynchronos.Services.Mediator;
 using McdfDataImporter;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using RoleplayingVoiceDalamud.Glamourer;
 
 namespace MareSynchronos.Interop.Ipc;
 
@@ -83,6 +84,10 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         _ = Task.Run(async () => await ApplyAppearanceAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
+    }
+    public CharacterCustomization GetGlamourerCustomization()
+    {
+        return _mareCharaFileManager.GetGlamourerCustomization();
     }
     public void CreateMCDF(string path)
     {

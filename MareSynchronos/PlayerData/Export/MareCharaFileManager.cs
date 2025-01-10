@@ -63,6 +63,13 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     }
 
     public bool CurrentlyWorking { get; private set; } = false;
+
+    public CharacterCustomization GetGlamourerCustomization()
+    {
+        var playerCharaFileData = _factory.Create("description", _characterData);
+        var playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
+        return playerCustomization;
+    }
     public async Task ApplyStandaloneGlamourerString(IGameObject? charaTarget, string appearance, int appearanceApplicationType)
     {
         string pastAppearanceValue = "";
