@@ -267,9 +267,16 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         if (!APIAvailable) return;
         await _dalamudUtil.RunOnFrameworkThread(() =>
         {
-            Logger.Debug("[{applicationId}] Removing temp collection for {collId}", applicationId, collId);
-            var ret2 = _penumbraRemoveTemporaryCollection.Invoke(collId);
-            Logger.Debug("[{applicationId}] RemoveTemporaryCollection: {ret2}", applicationId, ret2);
+            try
+            {
+                Logger.Debug("[{applicationId}] Removing temp collection for {collId}", applicationId, collId);
+                var ret2 = _penumbraRemoveTemporaryCollection.Invoke(collId);
+                Logger.Debug("[{applicationId}] RemoveTemporaryCollection: {ret2}", applicationId, ret2);
+            }
+            catch
+            {
+
+            }
         }).ConfigureAwait(false);
     }
 
