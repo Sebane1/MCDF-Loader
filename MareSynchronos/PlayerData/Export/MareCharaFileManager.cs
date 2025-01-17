@@ -143,7 +143,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     }
                 }
 
-                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, applicationType == AppearanceSwapType.PreserveAllPhysicalTraits).ConfigureAwait(false);
+                await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, applicationType == AppearanceSwapType.PreserveAllPhysicalTraits, true).ConfigureAwait(false);
                 //await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                 //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
             }

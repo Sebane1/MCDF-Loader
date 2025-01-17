@@ -104,7 +104,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         }
     }
 
-    public async Task ApplyAllAsync(IGameObject gameObject, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool onlyEquipment = false)
+    public async Task ApplyAllAsync(IGameObject gameObject, GameObjectHandler handler, string? customization, Guid applicationId, CancellationToken token, bool onlyEquipment = false, bool locksCustomization = false)
     {
         if (!APIAvailable || string.IsNullOrEmpty(customization) || _dalamudUtil.IsZoning) return;
 
@@ -118,7 +118,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
                 try
                 {
                     Logger.Debug("[{appid}] Calling on IPC: GlamourerApplyAll", applicationId);
-                    _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, 0, onlyEquipment ? Glamourer.Api.Enums.ApplyFlag.Equipment : Glamourer.Api.Enums.ApplyFlag.Customization | Glamourer.Api.Enums.ApplyFlag.Equipment);
+                    _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, locksCustomization ? LockCode : 0, onlyEquipment ? Glamourer.Api.Enums.ApplyFlag.Equipment : Glamourer.Api.Enums.ApplyFlag.Customization | Glamourer.Api.Enums.ApplyFlag.Equipment);
                 }
                 catch (Exception ex)
                 {
