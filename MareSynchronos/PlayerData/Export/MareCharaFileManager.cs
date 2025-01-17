@@ -261,7 +261,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                         }
                     }
 
-                    await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token).ConfigureAwait(false);
+                    await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, false, true).ConfigureAwait(false);
                     await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
                     _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 }
