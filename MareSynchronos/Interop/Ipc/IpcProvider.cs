@@ -109,7 +109,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         try
         {
-            if (path.Length < 256)
+            if (path.Contains(".mcdf"))
             {
                 var data = _mareCharaFileManager.LoadMareCharaFile(path);
                 if (data != null)

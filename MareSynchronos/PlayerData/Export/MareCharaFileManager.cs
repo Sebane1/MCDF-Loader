@@ -194,7 +194,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             || applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
                applicationType == AppearanceSwapType.PreserveRace;
 
-        bool penumbraCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance
+        bool penumbraCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyModData
                     || (applicationType != AppearanceSwapType.OnlyGlamourerData && applicationType != AppearanceSwapType.OnlyCustomizeData);
 
         if (charaTarget == null) return;
@@ -262,9 +262,9 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                     }
 
                     await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, false, true).ConfigureAwait(false);
-                    await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
-                    _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
                 }
+                await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
+                _dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
 
                 Guid? id = Guid.NewGuid();
                 if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
@@ -472,6 +472,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         PreserveMasculinityAndFemininity = 3,
         PreserveAllPhysicalTraits = 4,
         OnlyGlamourerData = 5,
-        OnlyCustomizeData = 6
+        OnlyCustomizeData = 6,
+        OnlyModData = 7
     }
 }
