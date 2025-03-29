@@ -68,7 +68,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
             {
                 string decodedScale = Encoding.UTF8.GetString(Convert.FromBase64String(scale));
                 _Logger.Debug("CustomizePlus applying for {chara}", c.Address.ToString("X"));
-                if (scale.IsNullOrEmpty())
+                if (!string.IsNullOrEmpty(scale))
                 {
                     _customizePlusRevertCharacter!.InvokeFunc(c.ObjectIndex);
                     return null;
