@@ -18,7 +18,7 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly ICallGateSubscriber<string, object> _honorificLocalCharacterTitleChanged;
     private readonly ICallGateSubscriber<object> _honorificReady;
     private readonly ICallGateSubscriber<int, string, object> _honorificSetCharacterTitle;
-    private readonly IPluginLog  _Logger;
+    private readonly IPluginLog _Logger;
     private readonly McdfMediator _mareMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
@@ -80,9 +80,9 @@ public sealed class IpcCallerHonorific : IIpcCaller
 
     public string GetTitle()
     {
-        if (!APIAvailable) return string.Empty;
-        string title = _honorificGetLocalCharacterTitle.InvokeFunc();
-        return string.IsNullOrEmpty(title) ? string.Empty : Convert.ToBase64String(Encoding.UTF8.GetBytes(title));
+        //if (!APIAvailable) return string.Empty;
+        //string title = _honorificGetLocalCharacterTitle.InvokeFunc();
+        return "";
     }
 
     public async Task SetTitleAsync(IntPtr character, string honorificDataB64)
