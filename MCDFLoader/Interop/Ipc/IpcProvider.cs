@@ -55,12 +55,15 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     }
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, int, bool>("McdfStandalone.LoadMcdf");
-        _loadFileProvider.RegisterFunc(LoadAppearance);
-        _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfStandalone.LoadMcdfAsync");
-        _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
-        _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
-        _handledGameAddresses.RegisterFunc(GetHandledAddresses);
+        _dalamudUtil.RunOnFrameworkThread(() =>
+        {
+            _loadFileProvider = _pi.GetIpcProvider<string, IGameObject, int, bool>("McdfStandalone.LoadMcdf");
+            _loadFileProvider.RegisterFunc(LoadAppearance);
+            _loadFileAsyncProvider = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfStandalone.LoadMcdfAsync");
+            _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
+            _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
+            _handledGameAddresses.RegisterFunc(GetHandledAddresses);
+        });
         return Task.CompletedTask;
     }
 
