@@ -116,10 +116,17 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
         while (await _dalamudUtil.RunOnFrameworkThread(() =>
                {
                    if (IsBeingDrawn()) return true;
-                   var gameObj = _dalamudUtil.CreateGameObject(Address);
-                   if (gameObj is Dalamud.Game.ClientState.Objects.Types.ICharacter chara)
+                   try
                    {
-                       act.Invoke(chara);
+                       var gameObj = _dalamudUtil.CreateGameObject(Address);
+                       if (gameObj is Dalamud.Game.ClientState.Objects.Types.ICharacter chara)
+                       {
+                           act.Invoke(chara);
+                       }
+                   }
+                   catch
+                   {
+
                    }
                    return false;
                }).ConfigureAwait(false))
