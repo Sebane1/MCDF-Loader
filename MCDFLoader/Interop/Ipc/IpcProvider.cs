@@ -22,6 +22,9 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     private ICallGateProvider<string, IGameObject, int, bool>? _loadFileProvider;
     private ICallGateProvider<string, IGameObject, Task<bool>>? _loadFileAsyncProvider;
     private ICallGateProvider<List<nint>>? _handledGameAddresses;
+    private ICallGateProvider<string, IGameObject, bool> _loadFileProviderMareCompat;
+    private ICallGateProvider<string, IGameObject, Task<bool>> _loadFileAsyncProviderMareCompat;
+    private ICallGateProvider<List<nint>> _handledGameAddressesMareCompat;
     private readonly List<GameObjectHandler> _activeGameObjectHandlers = [];
 
     public McdfMediator Mediator { get; init; }
@@ -63,6 +66,13 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
             _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
             _handledGameAddresses.RegisterFunc(GetHandledAddresses);
+
+            _loadFileProviderMareCompat = _pi.GetIpcProvider<string, IGameObject, bool>("MareSynchronos.LoadMcdf");
+            _loadFileProviderMareCompat.RegisterFunc(LoadAppearance);
+            _loadFileAsyncProviderMareCompat = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("MareSynchronos.LoadMcdfAsync");
+            _loadFileAsyncProviderMareCompat.RegisterFunc(LoadMcdfAsync);
+            _handledGameAddressesMareCompat = _pi.GetIpcProvider<List<nint>>("MareSynchronos.GetHandledAddresses");
+            _handledGameAddressesMareCompat.RegisterFunc(GetHandledAddresses);
         });
         return Task.CompletedTask;
     }
@@ -87,6 +97,10 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         _ = Task.Run(async () => await ApplyAppearanceAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
+    }
+    public bool LoadAppearance(string path, IGameObject target)
+    {
+        return LoadAppearance(path, target, 0);
     }
     public CharacterCustomization GetGlamourerCustomization()
     {
