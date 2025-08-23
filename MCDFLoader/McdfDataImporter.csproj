@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.Sdk/12.0.2">
+<Project Sdk="Dalamud.NET.SDK/13.0.0">
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="12.0.0" />
+    <PackageReference Include="DalamudPackager" Version="13.0.0" />
     <PackageReference Include="Downloader" Version="3.3.4" />
     <PackageReference Include="lz4net" Version="1.0.15.93" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.189">
@@ -39,12 +39,12 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
-    <PackageReference Include="Glamourer.Api" Version="2.4.1" />
+    <PackageReference Include="Glamourer.Api" Version="2.6.0" />
     <PackageReference Include="NGuid" Version="1.0.0" />
     <PackageReference Include="NReco.Logging.File" Version="1.2.2" />
-    <PackageReference Include="Penumbra.Api" Version="5.6.1" />
+    <PackageReference Include="Penumbra.Api" Version="5.10.0" />
     <PackageReference Include="Penumbra.String" Version="1.0.5" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.7" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.11" />
     <PackageReference Include="SonarAnalyzer.CSharp" Version="10.7.0.110445">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -68,14 +68,6 @@
     </Reference>
     <Reference Include="Dalamud">
       <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGui.NET">
-      <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="ImGuiScene">
-      <HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Lumina">
