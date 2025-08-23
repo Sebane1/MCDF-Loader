@@ -89,6 +89,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\DependanciesAPI\DependanciesAPI\Dependancies.API.csproj" />
     <ProjectReference Include="..\..\Dependancies\DependanciesAPI\Dependancies.API.csproj" />
   </ItemGroup>
 
