@@ -1426,6 +1426,12 @@
           "System.Xml.ReaderWriter": "4.3.0"
         }
       },
+      "dependancies.api": {
+        "type": "Project",
+        "dependencies": {
+          "MessagePack.Annotations": "[2.5.187, )"
+        }
+      },
       "maresynchronos.api": {
         "type": "Project",
         "dependencies": {
