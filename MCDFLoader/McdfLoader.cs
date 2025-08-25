@@ -1,29 +1,29 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.FileCache;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.PlayerData.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.FileCache;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.PlayerData.Services;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 
-namespace MareSynchronos;
+namespace McdfLoader;
 
-public class McdfLoader : MediatorSubscriberBase, IHostedService
+public class McdfDataLoader : MediatorSubscriberBase, IHostedService
 {
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareConfigService _mareConfigService;
+    private readonly McdfConfigService _McdfConfigService;
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private IServiceScope? _runtimeServiceScope;
     private Task? _launchTask = null;
 
-    public McdfLoader( MareConfigService mareConfigService,
+    public McdfDataLoader( McdfConfigService McdfConfigService,
         DalamudUtilService dalamudUtil,
         IServiceScopeFactory serviceScopeFactory, McdfMediator mediator) : base(mediator)
     {
-        _mareConfigService = mareConfigService;
+        _McdfConfigService = McdfConfigService;
         _dalamudUtil = dalamudUtil;
         _serviceScopeFactory = serviceScopeFactory;
     }
@@ -48,7 +48,7 @@ public class McdfLoader : MediatorSubscriberBase, IHostedService
 
         DalamudUtilOnLogOut();
 
-        Logger.Debug("Halting MarePlugin");
+        Logger.Debug("Halting McdfPlugin");
 
         return Task.CompletedTask;
     }

@@ -6,17 +6,17 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
-using MareSynchronos.Interop;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.Interop;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using GameObject = FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject;
 
-namespace MareSynchronos.Services;
+namespace McdfLoader.Services;
 
 public class DalamudUtilService : IHostedService, IMediatorSubscriber
 {

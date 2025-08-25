@@ -3,12 +3,12 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerCustomize : IIpcCaller
 {
@@ -21,10 +21,10 @@ public sealed class IpcCallerCustomize : IIpcCaller
     private readonly ICallGateSubscriber<Guid, int> _customizePlusDeleteByUniqueId;
     private readonly IPluginLog _Logger;
     private DalamudUtilService _dalamudUtil;
-    private McdfMediator _mareMediator;
+    private McdfMediator _McdfMediator;
 
     public IpcCallerCustomize( IDalamudPluginInterface dalamudPluginInterface,
-        DalamudUtilService dalamudUtil, McdfMediator mareMediator)
+        DalamudUtilService dalamudUtil, McdfMediator McdfMediator)
     {
         _customizePlusApiVersion = dalamudPluginInterface.GetIpcSubscriber<(int, int)>("CustomizePlus.General.GetApiVersion");
         _customizePlusGetActiveProfile = dalamudPluginInterface.GetIpcSubscriber<ushort, (int, Guid?)>("CustomizePlus.Profile.GetActiveProfileIdOnCharacter");
@@ -37,7 +37,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
         _customizePlusOnScaleUpdate.Subscribe(OnCustomizePlusScaleChange);
         _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
 
         CheckAPI();
     }
@@ -130,7 +130,7 @@ public sealed class IpcCallerCustomize : IIpcCaller
     private void OnCustomizePlusScaleChange(ushort c, Guid g)
     {
         var obj = _dalamudUtil.GetCharacterFromObjectTableByIndex(c);
-        _mareMediator.Publish(new CustomizePlusMessage(obj?.Address ?? null));
+        _McdfMediator.Publish(new CustomizePlusMessage(obj?.Address ?? null));
     }
 
     public void Dispose()

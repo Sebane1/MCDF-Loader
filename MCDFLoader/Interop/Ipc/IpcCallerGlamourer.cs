@@ -3,20 +3,20 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
-using MareSynchronos.MareConfiguration.Models;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.McdfConfiguration.Models;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcCaller
 {
     private readonly IPluginLog _Logger;
     private readonly IDalamudPluginInterface _pi;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly RedrawManager _redrawManager;
 
     private readonly ApiVersion _glamourerApiVersions;
@@ -31,8 +31,8 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
     private bool _shownGlamourerUnavailable = false;
     private readonly uint LockCode = 0x6D617265;
 
-    public IpcCallerGlamourer(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator,
-        RedrawManager redrawManager) : base(mareMediator)
+    public IpcCallerGlamourer(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator McdfMediator,
+        RedrawManager redrawManager) : base(McdfMediator)
     {
         _glamourerApiVersions = new ApiVersion(pi);
         _glamourerGetAllCustomization = new GetStateBase64(pi);
@@ -45,7 +45,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
         _Logger = EntryPoint.PluginLog;
         _pi = pi;
         _dalamudUtil = dalamudUtil;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _redrawManager = redrawManager;
         CheckAPI();
 
@@ -98,7 +98,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
             if (!apiAvailable && !_shownGlamourerUnavailable)
             {
                 _shownGlamourerUnavailable = true;
-                _mareMediator.Publish(new NotificationMessage("Glamourer inactive", "Your Glamourer installation is not active or out of date. Update Glamourer to continue to use MCDF Loader. If you just updated Glamourer, ignore this message.",
+                _McdfMediator.Publish(new NotificationMessage("Glamourer inactive", "Your Glamourer installation is not active or out of date. Update Glamourer to continue to use MCDF Loader. If you just updated Glamourer, ignore this message.",
                     NotificationType.Error));
             }
         }
@@ -169,7 +169,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
                     _glamourerRevert.Invoke(chara.ObjectIndex, LockCode);
                     Logger.Debug("[{appid}] Calling On IPC: PenumbraRedraw", applicationId);
 
-                    _mareMediator.Publish(new PenumbraRedrawCharacterMessage(chara));
+                    _McdfMediator.Publish(new PenumbraRedrawCharacterMessage(chara));
                 }
                 catch (Exception ex)
                 {
@@ -213,6 +213,6 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
 
     private void GlamourerChanged(nint address)
     {
-        _mareMediator.Publish(new GlamourerChangedMessage(address));
+        _McdfMediator.Publish(new GlamourerChangedMessage(address));
     }
 }

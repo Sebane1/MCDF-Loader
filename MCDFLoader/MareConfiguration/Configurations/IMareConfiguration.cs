@@ -1,5 +1,5 @@
-﻿namespace MareSynchronos.MareConfiguration.Configurations;
+﻿namespace McdfLoader.McdfConfiguration.Configurations;
 
-public interface IMareConfiguration
+public interface IMcdfConfiguration
 {
 }

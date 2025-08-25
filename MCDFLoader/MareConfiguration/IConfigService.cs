@@ -1,8 +1,8 @@
-﻿using MareSynchronos.MareConfiguration.Configurations;
+﻿using McdfLoader.McdfConfiguration.Configurations;
 
-namespace MareSynchronos.MareConfiguration;
+namespace McdfLoader.McdfConfiguration;
 
-public interface IConfigService<out T> : IDisposable where T : IMareConfiguration
+public interface IConfigService<out T> : IDisposable where T : IMcdfConfiguration
 {
     T Current { get; }
     string ConfigurationName { get; }

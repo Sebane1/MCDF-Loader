@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.PlayerData.Data;
+﻿namespace McdfLoader.PlayerData.Data;
 
 public class FileReplacementComparer : IEqualityComparer<FileReplacement>
 {

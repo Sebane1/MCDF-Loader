@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.Services.Mediator;
+﻿namespace McdfLoader.Services.Mediator;
 
 public interface IMediatorSubscriber
 {

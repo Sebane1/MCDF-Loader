@@ -1,12 +1,12 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration;
+using McdfLoader.McdfConfiguration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
 
-namespace MareSynchronos.Services.Mediator;
+namespace McdfLoader.Services.Mediator;
 
 public sealed class McdfMediator : IHostedService
 {
@@ -15,14 +15,14 @@ public sealed class McdfMediator : IHostedService
     private readonly IPluginLog _Logger;
     private readonly CancellationTokenSource _loopCts = new();
     private readonly ConcurrentQueue<MessageBase> _messageQueue = new();
-    private readonly MareConfigService _mareConfigService;
+    private readonly McdfConfigService _McdfConfigService;
     private readonly ConcurrentDictionary<Type, HashSet<SubscriberAction>> _subscriberDict = [];
     private bool _processQueue = false;
     private readonly ConcurrentDictionary<Type, MethodInfo?> _genericExecuteMethods = new();
-    public McdfMediator( MareConfigService mareConfigService)
+    public McdfMediator( McdfConfigService McdfConfigService)
     {
         _Logger = EntryPoint.PluginLog;
-        _mareConfigService = mareConfigService;
+        _McdfConfigService = McdfConfigService;
     }
 
     public void PrintSubscriberInfo()
@@ -58,7 +58,7 @@ public sealed class McdfMediator : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _Logger.Information("Starting MareMediator");
+        _Logger.Information("Starting McdfMediator");
 
         _ = Task.Run(async () =>
         {
@@ -82,7 +82,7 @@ public sealed class McdfMediator : IHostedService
             }
         });
 
-        _Logger.Information("Started MareMediator");
+        _Logger.Information("Started McdfMediator");
 
         return Task.CompletedTask;
     }

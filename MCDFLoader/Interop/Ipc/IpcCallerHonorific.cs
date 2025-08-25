@@ -2,12 +2,12 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 using System.Text;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerHonorific : IIpcCaller
 {
@@ -19,14 +19,14 @@ public sealed class IpcCallerHonorific : IIpcCaller
     private readonly ICallGateSubscriber<object> _honorificReady;
     private readonly ICallGateSubscriber<int, string, object> _honorificSetCharacterTitle;
     private readonly IPluginLog _Logger;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly DalamudUtilService _dalamudUtil;
 
     public IpcCallerHonorific(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator)
+        McdfMediator McdfMediator)
     {
         _Logger = EntryPoint.PluginLog;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _dalamudUtil = dalamudUtil;
         _honorificApiVersion = pi.GetIpcSubscriber<(uint, uint)>("Honorific.ApiVersion");
         _honorificGetLocalCharacterTitle = pi.GetIpcSubscriber<string>("Honorific.GetLocalCharacterTitle");
@@ -116,18 +116,18 @@ public sealed class IpcCallerHonorific : IIpcCaller
 
     private void OnHonorificDisposing()
     {
-        _mareMediator.Publish(new HonorificMessage(string.Empty));
+        _McdfMediator.Publish(new HonorificMessage(string.Empty));
     }
 
     private void OnHonorificLocalCharacterTitleChanged(string titleJson)
     {
         string titleData = string.IsNullOrEmpty(titleJson) ? string.Empty : Convert.ToBase64String(Encoding.UTF8.GetBytes(titleJson));
-        _mareMediator.Publish(new HonorificMessage(titleData));
+        _McdfMediator.Publish(new HonorificMessage(titleData));
     }
 
     private void OnHonorificReady()
     {
         CheckAPI();
-        _mareMediator.Publish(new HonorificReadyMessage());
+        _McdfMediator.Publish(new HonorificReadyMessage());
     }
 }

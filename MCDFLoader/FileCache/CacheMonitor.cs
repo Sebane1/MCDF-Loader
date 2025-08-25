@@ -1,19 +1,19 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.Interop.Ipc;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.Interop.Ipc;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using McdfDataImporter;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
 
-namespace MareSynchronos.FileCache;
+namespace McdfLoader.FileCache;
 
 public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 {
-    private readonly MareConfigService _configService;
+    private readonly McdfConfigService _configService;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly FileCompactor _fileCompactor;
     private readonly FileCacheManager _fileDbManager;
@@ -24,7 +24,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     private readonly CancellationTokenSource _periodicCalculationTokenSource = new();
     public static readonly IImmutableList<string> AllowedFileExtensions = [".mdl", ".tex", ".mtrl", ".tmb", ".pap", ".avfx", ".atex", ".sklb", ".eid", ".phyb", ".pbd", ".scd", ".skp", ".shpk"];
 
-    public CacheMonitor( IpcManager ipcManager, MareConfigService configService,
+    public CacheMonitor( IpcManager ipcManager, McdfConfigService configService,
         FileCacheManager fileDbManager, McdfMediator mediator,DalamudUtilService dalamudUtil,
         FileCompactor fileCompactor, PerformanceCollectorService performanceCollector) : base( mediator)
     {
@@ -37,14 +37,14 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         //Mediator.Subscribe<PenumbraInitializedMessage>(this, (_) =>
         //{
         //    StartPenumbraWatcher(_ipcManager.Penumbra.ModDirectory);
-        //    StartMareWatcher(configService.Current.CacheFolder);
+        //    StartMcdfWatcher(configService.Current.CacheFolder);
         //    InvokeScan();
         //});
         //Mediator.Subscribe<HaltScanMessage>(this, (msg) => HaltScan(msg.Source));
         //Mediator.Subscribe<ResumeScanMessage>(this, (msg) => ResumeScan(msg.Source));
         //Mediator.Subscribe<DalamudLoginMessage>(this, (_) =>
         //{
-        //    StartMareWatcher(configService.Current.CacheFolder);
+        //    StartMcdfWatcher(configService.Current.CacheFolder);
         //    StartPenumbraWatcher(_ipcManager.Penumbra.ModDirectory);
         //    InvokeScan();
         //});
@@ -59,7 +59,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         }
         if (configService.Current.HasValidSetup())
         {
-            StartMareWatcher(configService.Current.CacheFolder);
+            StartMcdfWatcher(configService.Current.CacheFolder);
             InvokeScan();
         }
 
@@ -104,37 +104,37 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
 
     record WatcherChange(WatcherChangeTypes ChangeType, string? OldPath = null);
     private readonly Dictionary<string, WatcherChange> _watcherChanges = new Dictionary<string, WatcherChange>(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, WatcherChange> _mareChanges = new Dictionary<string, WatcherChange>(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, WatcherChange> _McdfChanges = new Dictionary<string, WatcherChange>(StringComparer.OrdinalIgnoreCase);
 
     public void StopMonitoring()
     {
-        //Logger.Information("Stopping monitoring of Penumbra and Mare storage folders");
-        MareWatcher?.Dispose();
+        //Logger.Information("Stopping monitoring of Penumbra and Mcdf storage folders");
+        McdfWatcher?.Dispose();
         PenumbraWatcher?.Dispose();
-        MareWatcher = null;
+        McdfWatcher = null;
         PenumbraWatcher = null;
     }
 
     public bool StorageisNTFS { get; private set; } = false;
 
-    public void StartMareWatcher(string? marePath)
+    public void StartMcdfWatcher(string? McdfPath)
     {
-        MareWatcher?.Dispose();
-        if (string.IsNullOrEmpty(marePath) || !Directory.Exists(marePath))
+        McdfWatcher?.Dispose();
+        if (string.IsNullOrEmpty(McdfPath) || !Directory.Exists(McdfPath))
         {
-            MareWatcher = null;
-            //Logger.Warning("Mare file path is not set, cannot start the FSW for Mare.");
+            McdfWatcher = null;
+            //Logger.Warning("Mcdf file path is not set, cannot start the FSW for Mcdf.");
             return;
         }
 
         DriveInfo di = new(new DirectoryInfo(AppearanceAccessUtils.CacheLocation).Root.FullName);
         StorageisNTFS = string.Equals("NTFS", di.DriveFormat, StringComparison.OrdinalIgnoreCase);
-        //Logger.Information("Mare Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
+        //Logger.Information("Mcdf Storage is on NTFS drive: {isNtfs}", StorageisNTFS);
 
-        //Logger.Debug("Initializing Mare FSW on {path}", marePath);
-        MareWatcher = new()
+        //Logger.Debug("Initializing Mcdf FSW on {path}", McdfPath);
+        McdfWatcher = new()
         {
-            Path = marePath,
+            Path = McdfPath,
             InternalBufferSize = 8388608,
             NotifyFilter = NotifyFilters.CreationTime
                 | NotifyFilters.LastWrite
@@ -145,23 +145,23 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
             IncludeSubdirectories = false,
         };
 
-        //MareWatcher.Deleted += MareWatcher_FileChanged;
-        //MareWatcher.Created += MareWatcher_FileChanged;
-        MareWatcher.EnableRaisingEvents = true;
+        //McdfWatcher.Deleted += McdfWatcher_FileChanged;
+        //McdfWatcher.Created += McdfWatcher_FileChanged;
+        McdfWatcher.EnableRaisingEvents = true;
     }
 
-    private void MareWatcher_FileChanged(object sender, FileSystemEventArgs e)
+    private void McdfWatcher_FileChanged(object sender, FileSystemEventArgs e)
     {
-        //Logger.Debug("Mare FSW: FileChanged: {change} => {path}", e.ChangeType, e.FullPath);
+        //Logger.Debug("Mcdf FSW: FileChanged: {change} => {path}", e.ChangeType, e.FullPath);
 
         if (!AllowedFileExtensions.Any(ext => e.FullPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase))) return;
 
         lock (_watcherChanges)
         {
-            _mareChanges[e.FullPath] = new(e.ChangeType);
+            _McdfChanges[e.FullPath] = new(e.ChangeType);
         }
 
-        //_ = MareWatcherExecution();
+        //_ = McdfWatcherExecution();
     }
 
     public void StartPenumbraWatcher(string? penumbraPath)
@@ -249,18 +249,18 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     }
 
     private CancellationTokenSource _penumbraFswCts = new();
-    private CancellationTokenSource _mareFswCts = new();
+    private CancellationTokenSource _McdfFswCts = new();
     public FileSystemWatcher? PenumbraWatcher { get; private set; }
-    public FileSystemWatcher? MareWatcher { get; private set; }
+    public FileSystemWatcher? McdfWatcher { get; private set; }
 
-    //private async Task MareWatcherExecution()
+    //private async Task McdfWatcherExecution()
     //{
-    //    _mareFswCts = _mareFswCts.CancelRecreate();
-    //    var token = _mareFswCts.Token;
+    //    _McdfFswCts = _McdfFswCts.CancelRecreate();
+    //    var token = _McdfFswCts.Token;
     //    var delay = TimeSpan.FromSeconds(5);
     //    Dictionary<string, WatcherChange> changes;
-    //    lock (_mareChanges)
-    //        changes = _mareChanges.ToDictionary(t => t.Key, t => t.Value, StringComparer.Ordinal);
+    //    lock (_McdfChanges)
+    //        changes = _McdfChanges.ToDictionary(t => t.Key, t => t.Value, StringComparer.Ordinal);
     //    try
     //    {
     //        do
@@ -273,11 +273,11 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
     //        return;
     //    }
 
-    //    lock (_mareChanges)
+    //    lock (_McdfChanges)
     //    {
     //        foreach (var key in changes.Keys)
     //        {
-    //            _mareChanges.Remove(key);
+    //            _McdfChanges.Remove(key);
     //        }
     //    }
 
@@ -460,9 +460,9 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         base.Dispose(disposing);
         _scanCancellationTokenSource?.Cancel();
         PenumbraWatcher?.Dispose();
-        MareWatcher?.Dispose();
+        McdfWatcher?.Dispose();
         _penumbraFswCts?.CancelDispose();
-        _mareFswCts?.CancelDispose();
+        _McdfFswCts?.CancelDispose();
         _periodicCalculationTokenSource?.CancelDispose();
     }
 
@@ -480,7 +480,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         if (string.IsNullOrEmpty(AppearanceAccessUtils.CacheLocation) || !Directory.Exists(AppearanceAccessUtils.CacheLocation))
         {
             cacheDirExists = false;
-            //Logger.Warning("Mare Cache directory is not set or does not exist.");
+            //Logger.Warning("Mcdf Cache directory is not set or does not exist.");
         }
         if (!penDirExists || !cacheDirExists)
         {
@@ -683,7 +683,7 @@ public sealed class CacheMonitor : DisposableMediatorSubscriberBase
         {
             _configService.Current.InitialScanComplete = true;
             _configService.Save();
-            StartMareWatcher(AppearanceAccessUtils.CacheLocation);
+            StartMcdfWatcher(AppearanceAccessUtils.CacheLocation);
             StartPenumbraWatcher(penumbraDir);
         }
     }

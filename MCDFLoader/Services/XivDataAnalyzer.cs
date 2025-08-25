@@ -4,14 +4,14 @@ using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.Havok.Animation;
 using FFXIVClientStructs.Havok.Common.Base.Types;
 using FFXIVClientStructs.Havok.Common.Serialize.Util;
-using MareSynchronos.FileCache;
-using MareSynchronos.Interop.GameModel;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.PlayerData.Handlers;
+using McdfLoader.FileCache;
+using McdfLoader.Interop.GameModel;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.PlayerData.Handlers;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 
-namespace MareSynchronos.Services;
+namespace McdfLoader.Services;
 
 public sealed class XivDataAnalyzer
 {

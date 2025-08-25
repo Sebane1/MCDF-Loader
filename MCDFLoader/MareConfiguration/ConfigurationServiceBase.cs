@@ -1,9 +1,9 @@
-﻿using MareSynchronos.MareConfiguration.Configurations;
+﻿using McdfLoader.McdfConfiguration.Configurations;
 using System.Text.Json;
 
-namespace MareSynchronos.MareConfiguration;
+namespace McdfLoader.McdfConfiguration;
 
-public abstract class ConfigurationServiceBase<T> : IConfigService<T> where T : IMareConfiguration
+public abstract class ConfigurationServiceBase<T> : IConfigService<T> where T : IMcdfConfiguration
 {
     private readonly CancellationTokenSource _periodicCheckCts = new();
     private DateTime _configLastWriteTime;

@@ -1,6 +1,6 @@
-﻿using MareSynchronos.API.Data;
+﻿using McdfLoader.API.Data;
 
-namespace MareSynchronos.Services.Events;
+namespace McdfLoader.Services.Events;
 
 public record Event
 {

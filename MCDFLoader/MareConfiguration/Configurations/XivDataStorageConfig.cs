@@ -1,8 +1,8 @@
 ﻿using System.Collections.Concurrent;
 
-namespace MareSynchronos.MareConfiguration.Configurations;
+namespace McdfLoader.McdfConfiguration.Configurations;
 
-public class XivDataStorageConfig : IMareConfiguration
+public class XivDataStorageConfig : IMcdfConfiguration
 {
     public ConcurrentDictionary<string, long> TriangleDictionary { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public ConcurrentDictionary<string, Dictionary<string, List<ushort>>> BonesDictionary { get; set; } = new(StringComparer.OrdinalIgnoreCase);

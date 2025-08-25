@@ -1,14 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace MareSynchronos.Utils;
+namespace McdfLoader.Utils;
 
 [InterpolatedStringHandler]
-public readonly ref struct MareInterpolatedStringHandler
+public readonly ref struct McdfInterpolatedStringHandler
 {
     readonly StringBuilder _logMessageStringbuilder;
 
-    public MareInterpolatedStringHandler(int literalLength, int formattedCount)
+    public McdfInterpolatedStringHandler(int literalLength, int formattedCount)
     {
         _logMessageStringbuilder = new StringBuilder(literalLength);
     }

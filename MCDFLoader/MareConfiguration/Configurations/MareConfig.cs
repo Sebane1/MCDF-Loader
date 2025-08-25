@@ -1,10 +1,10 @@
-﻿using MareSynchronos.MareConfiguration.Models;
+﻿using McdfLoader.McdfConfiguration.Models;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.MareConfiguration.Configurations;
+namespace McdfLoader.McdfConfiguration.Configurations;
 
 [Serializable]
-public class MareConfig : IMareConfiguration
+public class McdfConfig : IMcdfConfiguration
 {
     public string CacheFolder { get; set; } = string.Empty;
     public bool InitialScanComplete { get; internal set; }

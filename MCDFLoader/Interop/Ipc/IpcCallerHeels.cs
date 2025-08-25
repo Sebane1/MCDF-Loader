@@ -1,16 +1,16 @@
 ﻿using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerHeels : IIpcCaller
 {
     private readonly IPluginLog  _Logger;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly ICallGateSubscriber<(int, int)> _heelsGetApiVersion;
     private readonly ICallGateSubscriber<string> _heelsGetOffset;
@@ -18,10 +18,10 @@ public sealed class IpcCallerHeels : IIpcCaller
     private readonly ICallGateSubscriber<int, string, object?> _heelsRegisterPlayer;
     private readonly ICallGateSubscriber<int, object?> _heelsUnregisterPlayer;
 
-    public IpcCallerHeels( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator mareMediator)
+    public IpcCallerHeels( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil, McdfMediator McdfMediator)
     {
         _Logger = EntryPoint.PluginLog;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _dalamudUtil = dalamudUtil;
         _heelsGetApiVersion = pi.GetIpcSubscriber<(int, int)>("SimpleHeels.ApiVersion");
         _heelsGetOffset = pi.GetIpcSubscriber<string>("SimpleHeels.GetLocalPlayer");
@@ -38,7 +38,7 @@ public sealed class IpcCallerHeels : IIpcCaller
 
     private void HeelsOffsetChange(string offset)
     {
-        _mareMediator.Publish(new HeelsOffsetMessage());
+        _McdfMediator.Publish(new HeelsOffsetMessage());
     }
 
     public async Task<string> GetOffsetAsync()

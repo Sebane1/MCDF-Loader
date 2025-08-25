@@ -1,15 +1,15 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.MareConfiguration.Configurations;
-using MareSynchronos.PlayerData.Data;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.McdfConfiguration.Configurations;
+using McdfLoader.PlayerData.Data;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace MareSynchronos.FileCache;
+namespace McdfLoader.FileCache;
 
 public sealed class TransientResourceManager : DisposableMediatorSubscriberBase
 {

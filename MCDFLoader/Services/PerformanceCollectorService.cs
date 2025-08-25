@@ -1,31 +1,31 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.Utils;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.Utils;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 
-namespace MareSynchronos.Services;
+namespace McdfLoader.Services;
 
 public sealed class PerformanceCollectorService : IHostedService
 {
     private const string _counterSplit = "=>";
     private readonly IPluginLog _logger;
-    private readonly MareConfigService _mareConfigService;
+    private readonly McdfConfigService _McdfConfigService;
     public ConcurrentDictionary<string, RollingList<(TimeOnly, long)>> PerformanceCounters { get; } = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource _periodicLogPruneTaskCts = new();
 
-    public PerformanceCollectorService( MareConfigService mareConfigService)
+    public PerformanceCollectorService( McdfConfigService McdfConfigService)
     {
         _logger = EntryPoint.PluginLog;
-        _mareConfigService = mareConfigService;
+        _McdfConfigService = McdfConfigService;
     }
 
-    public T LogPerformance<T>(object sender, MareInterpolatedStringHandler counterName, Func<T> func, int maxEntries = 10000)
+    public T LogPerformance<T>(object sender, McdfInterpolatedStringHandler counterName, Func<T> func, int maxEntries = 10000)
     {
-        if (!_mareConfigService.Current.LogPerformance) return func.Invoke();
+        if (!_McdfConfigService.Current.LogPerformance) return func.Invoke();
 
         string cn = sender.GetType().Name + _counterSplit + counterName.BuildMessage();
 
@@ -50,9 +50,9 @@ public sealed class PerformanceCollectorService : IHostedService
         }
     }
 
-    public void LogPerformance(object sender, MareInterpolatedStringHandler counterName, Action act, int maxEntries = 10000)
+    public void LogPerformance(object sender, McdfInterpolatedStringHandler counterName, Action act, int maxEntries = 10000)
     {
-        if (!_mareConfigService.Current.LogPerformance) { act.Invoke(); return; }
+        if (!_McdfConfigService.Current.LogPerformance) { act.Invoke(); return; }
 
         var cn = sender.GetType().Name + _counterSplit + counterName.BuildMessage();
 
@@ -94,7 +94,7 @@ public sealed class PerformanceCollectorService : IHostedService
 
     internal void PrintPerformanceStats(int limitBySeconds = 0)
     {
-        if (!_mareConfigService.Current.LogPerformance)
+        if (!_McdfConfigService.Current.LogPerformance)
         {
             _logger.Warning("Performance counters are disabled");
         }

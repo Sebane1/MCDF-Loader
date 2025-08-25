@@ -1,8 +1,8 @@
-﻿using MareSynchronos.API.Data;
+﻿using McdfLoader.API.Data;
 
 using System.Text.RegularExpressions;
 
-namespace MareSynchronos.PlayerData.Data;
+namespace McdfLoader.PlayerData.Data;
 
 public partial class FileReplacement
 {

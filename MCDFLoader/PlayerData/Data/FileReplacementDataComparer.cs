@@ -1,7 +1,7 @@
 ﻿
-using MareSynchronos.API.Data;
+using McdfLoader.API.Data;
 
-namespace MareSynchronos.PlayerData.Data;
+namespace McdfLoader.PlayerData.Data;
 
 public class FileReplacementDataComparer : IEqualityComparer<FileReplacementData>
 {

@@ -1,5 +1,5 @@
-﻿using MareSynchronos.Interop.Ipc;
-using MareSynchronos.PlayerData.Export;
+﻿using McdfLoader.Interop.Ipc;
+using McdfLoader.PlayerData.Export;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,32 +1,32 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public class RedrawManager
 {
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly DalamudUtilService _dalamudUtil;
     private readonly ConcurrentDictionary<nint, bool> _penumbraRedrawRequests = [];
     private CancellationTokenSource _disposalCts = new();
 
     public SemaphoreSlim RedrawSemaphore { get; init; } = new(2, 2);
 
-    public RedrawManager(McdfMediator mareMediator, DalamudUtilService dalamudUtil)
+    public RedrawManager(McdfMediator McdfMediator, DalamudUtilService dalamudUtil)
     {
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _dalamudUtil = dalamudUtil;
     }
 
     public async Task PenumbraRedrawInternalAsync( GameObjectHandler handler, Guid applicationId, Action<ICharacter> action, CancellationToken token)
     {
-        _mareMediator.Publish(new PenumbraStartRedrawMessage(handler.Address));
+        _McdfMediator.Publish(new PenumbraStartRedrawMessage(handler.Address));
 
         _penumbraRedrawRequests[handler.Address] = true;
 
@@ -44,7 +44,7 @@ public class RedrawManager
         finally
         {
             _penumbraRedrawRequests[handler.Address] = false;
-            _mareMediator.Publish(new PenumbraEndRedrawMessage(handler.Address));
+            _McdfMediator.Publish(new PenumbraEndRedrawMessage(handler.Address));
         }
     }
 

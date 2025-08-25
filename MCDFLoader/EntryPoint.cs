@@ -3,26 +3,26 @@ using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using MareSynchronos;
-using MareSynchronos.FileCache;
-using MareSynchronos.Interop;
-using MareSynchronos.Interop.Ipc;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.MareConfiguration.Configurations;
-using MareSynchronos.PlayerData.Export;
-using MareSynchronos.PlayerData.Factories;
-using MareSynchronos.PlayerData.Pairs;
-using MareSynchronos.PlayerData.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Events;
-using MareSynchronos.Services.Mediator;
+using McdfLoader;
+using McdfLoader.FileCache;
+using McdfLoader.Interop;
+using McdfLoader.Interop.Ipc;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.McdfConfiguration.Configurations;
+using McdfLoader.PlayerData.Export;
+using McdfLoader.PlayerData.Factories;
+using McdfLoader.PlayerData.Pairs;
+using McdfLoader.PlayerData.Services;
+using McdfLoader.Services;
+using McdfLoader.Services.Events;
+using McdfLoader.Services.Mediator;
 using McdfDataImporter;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NReco.Logging.File;
 
-namespace MareSynchronos;
+namespace McdfLoader;
 
 public sealed class EntryPoint
 {
@@ -70,7 +70,7 @@ public sealed class EntryPoint
         .ConfigureLogging(lb =>
         {
             lb.ClearProviders();
-            lb.AddFile(Path.Combine(traceDir, $"mare-trace-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log"), (opt) =>
+            lb.AddFile(Path.Combine(traceDir, $"Mcdf-trace-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.log"), (opt) =>
             {
                 opt.Append = true;
                 opt.RollingFilesConvention = FileLoggerOptions.FileRollingConvention.Ascending;
@@ -82,18 +82,18 @@ public sealed class EntryPoint
         .ConfigureServices(collection =>
         {
             collection.AddSingleton<FileDialogManager>();
-            // add mare related singletons
+            // add Mcdf related singletons
             collection.AddSingleton<McdfMediator>();
             collection.AddSingleton<FileCacheManager>();
-            collection.AddSingleton<MareCharaFileManager>();
+            collection.AddSingleton<McdfCharaFileManager>();
             collection.AddSingleton<PerformanceCollectorService>();
-            collection.AddSingleton<McdfLoader>();
+            collection.AddSingleton<McdfDataLoader>();
             collection.AddSingleton<GameObjectHandlerFactory>();
             collection.AddSingleton<XivDataAnalyzer>();
             collection.AddSingleton<FileCompactor>();
             collection.AddSingleton((s) => new IpcProvider(
                 pluginInterface,
-                s.GetRequiredService<MareCharaFileManager>(), s.GetRequiredService<DalamudUtilService>(),
+                s.GetRequiredService<McdfCharaFileManager>(), s.GetRequiredService<DalamudUtilService>(),
                 s.GetRequiredService<McdfMediator>()));
             collection.AddSingleton((s) => new DalamudUtilService(
                 clientState, objectTable, framework, gameGui, condition, gameData, targetManager, s.GetRequiredService<McdfMediator>(), s.GetRequiredService<PerformanceCollectorService>()));
@@ -124,13 +124,13 @@ public sealed class EntryPoint
                 s.GetRequiredService<IpcCallerMoodles>(), s.GetRequiredService<IpcCallerPetNames>()));
             collection.AddSingleton((s) => new NotificationService(
                 s.GetRequiredService<McdfMediator>(), s.GetRequiredService<DalamudUtilService>(),
-                notificationManager, chatGui, s.GetRequiredService<MareConfigService>()));
-            collection.AddSingleton((s) => new MareConfigService(path));
+                notificationManager, chatGui, s.GetRequiredService<McdfConfigService>()));
+            collection.AddSingleton((s) => new McdfConfigService(path));
             collection.AddSingleton((s) => new TransientConfigService(pluginInterface.ConfigDirectory.FullName));
             collection.AddSingleton((s) => new XivDataStorageService(pluginInterface.ConfigDirectory.FullName));
-            collection.AddSingleton<IConfigService<IMareConfiguration>>(s => s.GetRequiredService<MareConfigService>());
-            collection.AddSingleton<IConfigService<IMareConfiguration>>(s => s.GetRequiredService<TransientConfigService>());
-            collection.AddSingleton<IConfigService<IMareConfiguration>>(s => s.GetRequiredService<XivDataStorageService>());
+            collection.AddSingleton<IConfigService<IMcdfConfiguration>>(s => s.GetRequiredService<McdfConfigService>());
+            collection.AddSingleton<IConfigService<IMcdfConfiguration>>(s => s.GetRequiredService<TransientConfigService>());
+            collection.AddSingleton<IConfigService<IMcdfConfiguration>>(s => s.GetRequiredService<XivDataStorageService>());
             collection.AddSingleton<ConfigurationSaveService>();
 
             // add scoped services
@@ -147,7 +147,7 @@ public sealed class EntryPoint
             collection.AddHostedService(p => p.GetRequiredService<DalamudUtilService>());
             collection.AddHostedService(p => p.GetRequiredService<PerformanceCollectorService>());
             collection.AddHostedService(p => p.GetRequiredService<IpcProvider>());
-            collection.AddHostedService(p => p.GetRequiredService<McdfLoader>());
+            collection.AddHostedService(p => p.GetRequiredService<McdfDataLoader>());
             _collection = collection;
         })
         .Build();

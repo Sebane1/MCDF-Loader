@@ -1,26 +1,26 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.MareConfiguration.Models;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.McdfConfiguration.Models;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using NotificationType = MareSynchronos.MareConfiguration.Models.NotificationType;
+using NotificationType = McdfLoader.McdfConfiguration.Models.NotificationType;
 
-namespace MareSynchronos.Services;
+namespace McdfLoader.Services;
 
 public class NotificationService : DisposableMediatorSubscriberBase, IHostedService
 {
     private readonly DalamudUtilService _dalamudUtilService;
     private readonly INotificationManager _notificationManager;
     private readonly IChatGui _chatGui;
-    private readonly MareConfigService _configurationService;
+    private readonly McdfConfigService _configurationService;
 
     public NotificationService( McdfMediator mediator,
         DalamudUtilService dalamudUtilService,
         INotificationManager notificationManager,
-        IChatGui chatGui, MareConfigService configurationService) : base( mediator)
+        IChatGui chatGui, McdfConfigService configurationService) : base( mediator)
     {
         _dalamudUtilService = dalamudUtilService;
         _notificationManager = notificationManager;
@@ -41,19 +41,19 @@ public class NotificationService : DisposableMediatorSubscriberBase, IHostedServ
 
     private void PrintErrorChat(string? message)
     {
-        SeStringBuilder se = new SeStringBuilder().AddText("[Mare Synchronos] Error: " + message);
+        SeStringBuilder se = new SeStringBuilder().AddText("[Mcdf Synchronos] Error: " + message);
         _chatGui.PrintError(se.BuiltString);
     }
 
     private void PrintInfoChat(string? message)
     {
-        SeStringBuilder se = new SeStringBuilder().AddText("[Mare Synchronos] Info: ").AddItalics(message ?? string.Empty);
+        SeStringBuilder se = new SeStringBuilder().AddText("[Mcdf Synchronos] Info: ").AddItalics(message ?? string.Empty);
         _chatGui.Print(se.BuiltString);
     }
 
     private void PrintWarnChat(string? message)
     {
-        SeStringBuilder se = new SeStringBuilder().AddText("[Mare Synchronos] ").AddUiForeground("Warning: " + (message ?? string.Empty), 31).AddUiForegroundOff();
+        SeStringBuilder se = new SeStringBuilder().AddText("[Mcdf Synchronos] ").AddUiForeground("Warning: " + (message ?? string.Empty), 31).AddUiForegroundOff();
         _chatGui.Print(se.BuiltString);
     }
 

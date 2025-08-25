@@ -1,7 +1,7 @@
 ﻿using Dalamud.Plugin.Services;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Services.Mediator;
+namespace McdfLoader.Services.Mediator;
 
 public abstract class DisposableMediatorSubscriberBase : MediatorSubscriberBase, IDisposable
 {

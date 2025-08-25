@@ -1,6 +1,6 @@
 ﻿#nullable disable
 
-namespace MareSynchronos.FileCache;
+namespace McdfLoader.FileCache;
 
 public class FileCacheEntity
 {

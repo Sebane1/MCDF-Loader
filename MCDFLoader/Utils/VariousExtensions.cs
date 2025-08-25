@@ -1,12 +1,12 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
-using MareSynchronos.API.Data;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.PlayerData.Pairs;
+using McdfLoader.API.Data;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.PlayerData.Pairs;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace MareSynchronos.Utils;
+namespace McdfLoader.Utils;
 
 public static class VariousExtensions
 {

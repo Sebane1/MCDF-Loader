@@ -1,22 +1,22 @@
 ﻿using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration.Models;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.McdfConfiguration.Models;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 using Penumbra.Api.Enums;
 using Penumbra.Api.Helpers;
 using Penumbra.Api.IpcSubscribers;
 using System.Collections.Concurrent;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCaller
 {
     private readonly IDalamudPluginInterface _pi;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly RedrawManager _redrawManager;
     private bool _shownPenumbraUnavailable = false;
     private string? _penumbraModDirectory;
@@ -28,7 +28,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
             if (!string.Equals(_penumbraModDirectory, value, StringComparison.Ordinal))
             {
                 _penumbraModDirectory = value;
-                _mareMediator.Publish(new PenumbraDirectoryChangedMessage(_penumbraModDirectory));
+                _McdfMediator.Publish(new PenumbraDirectoryChangedMessage(_penumbraModDirectory));
             }
         }
     }
@@ -55,11 +55,11 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
     private readonly GetGameObjectResourcePaths _penumbraResourcePaths;
 
     public IpcCallerPenumbra(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator, RedrawManager redrawManager) : base(mareMediator)
+        McdfMediator McdfMediator, RedrawManager redrawManager) : base(McdfMediator)
     {
         _pi = pi;
         _dalamudUtil = dalamudUtil;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _redrawManager = redrawManager;
         _penumbraInit = Initialized.Subscriber(pi, PenumbraInit);
         _penumbraDispose = Disposed.Subscriber(pi, PenumbraDispose);
@@ -77,7 +77,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         _penumbraModSettingChanged = ModSettingChanged.Subscriber(pi, (change, arg1, arg, b) =>
         {
             if (change == ModSettingChange.EnableState)
-                _mareMediator.Publish(new PenumbraModSettingChangedMessage());
+                _McdfMediator.Publish(new PenumbraModSettingChangedMessage());
         });
         _penumbraConvertTextureFile = new ConvertTextureFile(pi);
         _penumbraResourcePaths = new GetGameObjectResourcePaths(pi);
@@ -126,8 +126,8 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
             if (!penumbraAvailable && !_shownPenumbraUnavailable)
             {
                 _shownPenumbraUnavailable = true;
-                _mareMediator.Publish(new NotificationMessage("Penumbra inactive",
-                    "Your Penumbra installation is not active or out of date. Update Penumbra and/or the Enable Mods setting in Penumbra to continue to use Mare. If you just updated Penumbra, ignore this message.",
+                _McdfMediator.Publish(new NotificationMessage("Penumbra inactive",
+                    "Your Penumbra installation is not active or out of date. Update Penumbra and/or the Enable Mods setting in Penumbra to continue to use Mcdf. If you just updated Penumbra, ignore this message.",
                     NotificationType.Error));
             }
         }
@@ -174,7 +174,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
     {
         if (!APIAvailable) return;
 
-        _mareMediator.Publish(new HaltScanMessage(nameof(ConvertTextureFiles)));
+        _McdfMediator.Publish(new HaltScanMessage(nameof(ConvertTextureFiles)));
         int currentTexture = 0;
         foreach (var texture in textures)
         {
@@ -201,7 +201,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
                 }
             }
         }
-        _mareMediator.Publish(new ResumeScanMessage(nameof(ConvertTextureFiles)));
+        _McdfMediator.Publish(new ResumeScanMessage(nameof(ConvertTextureFiles)));
 
         await _dalamudUtil.RunOnFrameworkThread(async () =>
         {
@@ -293,7 +293,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         await _dalamudUtil.RunOnFrameworkThread(() =>
         {
             Logger.Debug("[{applicationId}] Manip: {data}", applicationId, manipulationData);
-            var retAdd = _penumbraAddTemporaryMod.Invoke("MareChara_Meta", collId, [], manipulationData, 0);
+            var retAdd = _penumbraAddTemporaryMod.Invoke("McdfChara_Meta", collId, [], manipulationData, 0);
             Logger.Debug("[{applicationId}] Setting temp meta mod for {collId}, Success: {ret}", applicationId, collId, retAdd);
         }).ConfigureAwait(false);
     }
@@ -308,9 +308,9 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
             {
                 Logger.Debug("[{applicationId}] Change: {from} => {to}", applicationId, mod.Key, mod.Value);
             }
-            var retRemove = _penumbraRemoveTemporaryMod.Invoke("MareChara_Files", collId, 0);
+            var retRemove = _penumbraRemoveTemporaryMod.Invoke("McdfChara_Files", collId, 0);
             Logger.Debug("[{applicationId}] Removing temp files mod for {collId}, Success: {ret}", applicationId, collId, retRemove);
-            var retAdd = _penumbraAddTemporaryMod.Invoke("MareChara_Files", collId, modPaths, string.Empty, 0);
+            var retAdd = _penumbraAddTemporaryMod.Invoke("McdfChara_Files", collId, modPaths, string.Empty, 0);
             Logger.Debug("[{applicationId}] Setting temp files mod for {collId}, Success: {ret}", applicationId, collId, retAdd);
         }).ConfigureAwait(false);
     }
@@ -324,7 +324,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         }
         else
         {
-            _mareMediator.Publish(new PenumbraRedrawMessage(objectAddress, objectTableIndex, wasRequested));
+            _McdfMediator.Publish(new PenumbraRedrawMessage(objectAddress, objectTableIndex, wasRequested));
         }
     }
 
@@ -332,21 +332,21 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
     {
         if (ptr != IntPtr.Zero && string.Compare(arg1, arg2, ignoreCase: true, System.Globalization.CultureInfo.InvariantCulture) != 0)
         {
-            _mareMediator.Publish(new PenumbraResourceLoadMessage(ptr, arg1, arg2));
+            _McdfMediator.Publish(new PenumbraResourceLoadMessage(ptr, arg1, arg2));
         }
     }
 
     private void PenumbraDispose()
     {
         _redrawManager.Cancel();
-        _mareMediator.Publish(new PenumbraDisposedMessage());
+        _McdfMediator.Publish(new PenumbraDisposedMessage());
     }
 
     private void PenumbraInit()
     {
         APIAvailable = true;
         ModDirectory = _penumbraResolveModDir.Invoke();
-        _mareMediator.Publish(new PenumbraInitializedMessage());
+        _McdfMediator.Publish(new PenumbraInitializedMessage());
         _penumbraRedraw!.Invoke(0, setting: RedrawType.Redraw);
     }
 }

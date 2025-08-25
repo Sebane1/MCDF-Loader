@@ -1,12 +1,12 @@
-﻿using MareSynchronos.API.Data;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.FileCache;
+﻿using McdfLoader.API.Data;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.FileCache;
 using System.Text;
 using System.Text.Json;
 
-namespace MareSynchronos.PlayerData.Export;
+namespace McdfLoader.PlayerData.Export;
 
-public record MareCharaFileData
+public record McdfCharaFileData
 {
     public string Description { get; set; } = string.Empty;
     public string GlamourerData { get; set; } = string.Empty;
@@ -15,8 +15,8 @@ public record MareCharaFileData
     public List<FileData> Files { get; set; } = [];
     public List<FileSwap> FileSwaps { get; set; } = [];
 
-    public MareCharaFileData() { }
-    public MareCharaFileData(FileCacheManager manager, string description, CharacterData dto)
+    public McdfCharaFileData() { }
+    public McdfCharaFileData(FileCacheManager manager, string description, CharacterData dto)
     {
         Description = description;
 
@@ -128,9 +128,9 @@ public record MareCharaFileData
         return Encoding.UTF8.GetBytes(JsonSerializer.Serialize(this));
     }
 
-    public static MareCharaFileData FromByteArray(byte[] data)
+    public static McdfCharaFileData FromByteArray(byte[] data)
     {
-        return JsonSerializer.Deserialize<MareCharaFileData>(Encoding.UTF8.GetString(data))!;
+        return JsonSerializer.Deserialize<McdfCharaFileData>(Encoding.UTF8.GetString(data))!;
     }
 
     public record FileSwap(IEnumerable<string> GamePaths, string FileSwapPath);

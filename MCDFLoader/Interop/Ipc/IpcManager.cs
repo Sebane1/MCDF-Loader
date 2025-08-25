@@ -1,8 +1,8 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed partial class IpcManager : DisposableMediatorSubscriberBase
 {

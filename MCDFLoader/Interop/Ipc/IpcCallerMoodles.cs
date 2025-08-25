@@ -2,11 +2,11 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerMoodles : IIpcCaller
 {
@@ -17,14 +17,14 @@ public sealed class IpcCallerMoodles : IIpcCaller
     private readonly ICallGateSubscriber<nint, object> _moodlesRevertStatus;
     private readonly IPluginLog _Logger;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
 
     public IpcCallerMoodles( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator)
+        McdfMediator McdfMediator)
     {
         _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
 
         _moodlesApiVersion = pi.GetIpcSubscriber<int>("Moodles.Version");
         _moodlesOnChange = pi.GetIpcSubscriber<IPlayerCharacter, object>("Moodles.StatusManagerModified");
@@ -39,7 +39,7 @@ public sealed class IpcCallerMoodles : IIpcCaller
 
     private void OnMoodlesChange(IPlayerCharacter character)
     {
-        _mareMediator.Publish(new MoodlesMessage(character.Address));
+        _McdfMediator.Publish(new MoodlesMessage(character.Address));
     }
 
     public bool APIAvailable { get; private set; } = false;

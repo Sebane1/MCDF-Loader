@@ -1,31 +1,31 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.PlayerData.Factories;
+namespace McdfLoader.PlayerData.Factories;
 
 public class GameObjectHandlerFactory
 {
     private readonly DalamudUtilService _dalamudUtilService;
     private readonly IPluginLog _logger;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
     private readonly PerformanceCollectorService _performanceCollectorService;
 
-    public GameObjectHandlerFactory( PerformanceCollectorService performanceCollectorService, McdfMediator mareMediator,
+    public GameObjectHandlerFactory( PerformanceCollectorService performanceCollectorService, McdfMediator McdfMediator,
         DalamudUtilService dalamudUtilService)
     {
         _logger = EntryPoint.PluginLog;
         _performanceCollectorService = performanceCollectorService;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
         _dalamudUtilService = dalamudUtilService;
     }
 
     public async Task<GameObjectHandler> Create(ObjectKind objectKind, Func<nint> getAddressFunc, bool isWatched = false)
     {
         return await _dalamudUtilService.RunOnFrameworkThread(() => new GameObjectHandler(
-            _performanceCollectorService, _mareMediator, _dalamudUtilService, objectKind, getAddressFunc, isWatched)).ConfigureAwait(false);
+            _performanceCollectorService, _McdfMediator, _dalamudUtilService, objectKind, getAddressFunc, isWatched)).ConfigureAwait(false);
     }
 }

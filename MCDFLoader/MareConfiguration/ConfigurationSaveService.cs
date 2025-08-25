@@ -1,11 +1,11 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration.Configurations;
+using McdfLoader.McdfConfiguration.Configurations;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
 
-namespace MareSynchronos.MareConfiguration;
+namespace McdfLoader.McdfConfiguration;
 
 public class ConfigurationSaveService : IHostedService
 {
@@ -15,7 +15,7 @@ public class ConfigurationSaveService : IHostedService
     public const string BackupFolder = "config_backup";
     private readonly MethodInfo _saveMethod;
 
-    public ConfigurationSaveService(IEnumerable<IConfigService<IMareConfiguration>> configs)
+    public ConfigurationSaveService(IEnumerable<IConfigService<IMcdfConfiguration>> configs)
     {
         foreach (var config in configs)
         {
@@ -54,7 +54,7 @@ public class ConfigurationSaveService : IHostedService
         }
     }
 
-    private async Task SaveConfig<T>(IConfigService<T> config) where T : IMareConfiguration
+    private async Task SaveConfig<T>(IConfigService<T> config) where T : IMcdfConfiguration
     {
     }
 

@@ -1,7 +1,7 @@
-﻿using MareSynchronos.API.Data;
-using MareSynchronos.API.Data.Enum;
+﻿using McdfLoader.API.Data;
+using McdfLoader.API.Data.Enum;
 
-namespace MareSynchronos.PlayerData.Data;
+namespace McdfLoader.PlayerData.Data;
 
 public class CharacterData
 {

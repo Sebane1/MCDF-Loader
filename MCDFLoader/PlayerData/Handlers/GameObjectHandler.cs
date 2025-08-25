@@ -1,15 +1,15 @@
 ﻿using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using Microsoft.Extensions.Logging;
 using System.Runtime.CompilerServices;
 using static FFXIVClientStructs.FFXIV.Client.Game.Character.DrawDataContainer;
-using ObjectKind = MareSynchronos.API.Data.Enum.ObjectKind;
+using ObjectKind = McdfLoader.API.Data.Enum.ObjectKind;
 
-namespace MareSynchronos.PlayerData.Handlers;
+namespace McdfLoader.PlayerData.Handlers;
 
 public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
 {

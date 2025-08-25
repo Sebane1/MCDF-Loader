@@ -1,10 +1,10 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.Services;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.Services;
 using Microsoft.Extensions.Logging;
 using System.Runtime.InteropServices;
 
-namespace MareSynchronos.FileCache;
+namespace McdfLoader.FileCache;
 
 public sealed class FileCompactor
 {
@@ -16,14 +16,14 @@ public sealed class FileCompactor
     private readonly WOF_FILE_COMPRESSION_INFO_V1 _efInfo;
     private readonly IPluginLog _Logger;
 
-    private readonly MareConfigService _mareConfigService;
+    private readonly McdfConfigService _McdfConfigService;
     private readonly DalamudUtilService _dalamudUtilService;
 
-    public FileCompactor( MareConfigService mareConfigService, DalamudUtilService dalamudUtilService)
+    public FileCompactor( McdfConfigService McdfConfigService, DalamudUtilService dalamudUtilService)
     {
         _clusterSizes = new(StringComparer.Ordinal);
         _Logger = EntryPoint.PluginLog;
-        _mareConfigService = mareConfigService;
+        _McdfConfigService = McdfConfigService;
         _dalamudUtilService = dalamudUtilService;
         _efInfo = new WOF_FILE_COMPRESSION_INFO_V1
         {
@@ -51,7 +51,7 @@ public sealed class FileCompactor
         MassCompactRunning = true;
 
         int currentFile = 1;
-        var allFiles = Directory.EnumerateFiles(_mareConfigService.Current.CacheFolder).ToList();
+        var allFiles = Directory.EnumerateFiles(_McdfConfigService.Current.CacheFolder).ToList();
         int allFilesCount = allFiles.Count;
         foreach (var file in allFiles)
         {

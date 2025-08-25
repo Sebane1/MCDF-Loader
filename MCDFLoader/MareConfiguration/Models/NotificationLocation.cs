@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.MareConfiguration.Models;
+﻿namespace McdfLoader.McdfConfiguration.Models;
 
 public enum NotificationLocation
 {

@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.PlayerData.Pairs;
+﻿namespace McdfLoader.PlayerData.Pairs;
 
 public enum PlayerChanges
 {

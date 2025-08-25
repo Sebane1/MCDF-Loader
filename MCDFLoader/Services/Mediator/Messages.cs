@@ -1,12 +1,12 @@
 ﻿using Dalamud.Game.ClientState.Objects.Types;
-using MareSynchronos.API.Data;
-using MareSynchronos.API.Dto;
-using MareSynchronos.MareConfiguration.Models;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services.Events;
+using McdfLoader.API.Data;
+using McdfLoader.API.Dto;
+using McdfLoader.McdfConfiguration.Models;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services.Events;
 using System.Numerics;
 
-namespace MareSynchronos.Services.Mediator;
+namespace McdfLoader.Services.Mediator;
 
 #pragma warning disable MA0048 // File name must match type name
 #pragma warning disable S2094

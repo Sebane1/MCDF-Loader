@@ -2,41 +2,41 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
-using MareSynchronos.PlayerData.Export;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.PlayerData.Export;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using McdfDataImporter;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using RoleplayingVoiceDalamud.Glamourer;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public class IpcProvider : IHostedService, IMediatorSubscriber
 {
     private readonly IPluginLog _Logger;
     private readonly IDalamudPluginInterface _pi;
-    private readonly MareCharaFileManager _mareCharaFileManager;
+    private readonly McdfCharaFileManager _McdfCharaFileManager;
     private readonly DalamudUtilService _dalamudUtil;
     private ICallGateProvider<string, IGameObject, int, bool>? _loadFileProvider;
     private ICallGateProvider<string, IGameObject, Task<bool>>? _loadFileAsyncProvider;
     private ICallGateProvider<List<nint>>? _handledGameAddresses;
-    private ICallGateProvider<string, IGameObject, bool> _loadFileProviderMareCompat;
-    private ICallGateProvider<string, IGameObject, Task<bool>> _loadFileAsyncProviderMareCompat;
-    private ICallGateProvider<List<nint>> _handledGameAddressesMareCompat;
+    private ICallGateProvider<string, IGameObject, bool> _loadFileProviderMcdfCompat;
+    private ICallGateProvider<string, IGameObject, Task<bool>> _loadFileAsyncProviderMcdfCompat;
+    private ICallGateProvider<List<nint>> _handledGameAddressesMcdfCompat;
     private readonly List<GameObjectHandler> _activeGameObjectHandlers = [];
 
     public McdfMediator Mediator { get; init; }
 
     public IpcProvider(IDalamudPluginInterface pi,
-        MareCharaFileManager mareCharaFileManager, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator)
+        McdfCharaFileManager McdfCharaFileManager, DalamudUtilService dalamudUtil,
+        McdfMediator McdfMediator)
     {
         _pi = pi;
-        _mareCharaFileManager = mareCharaFileManager;
+        _McdfCharaFileManager = McdfCharaFileManager;
         _dalamudUtil = dalamudUtil;
-        Mediator = mareMediator;
+        Mediator = McdfMediator;
 
         Mediator.Subscribe<GameObjectHandlerCreatedMessage>(this, (msg) =>
         {
@@ -67,12 +67,12 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
             _handledGameAddresses.RegisterFunc(GetHandledAddresses);
 
-            _loadFileProviderMareCompat = _pi.GetIpcProvider<string, IGameObject, bool>("MareSynchronos.LoadMcdf");
-            _loadFileProviderMareCompat.RegisterFunc(LoadAppearance);
-            _loadFileAsyncProviderMareCompat = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("MareSynchronos.LoadMcdfAsync");
-            _loadFileAsyncProviderMareCompat.RegisterFunc(LoadMcdfAsync);
-            _handledGameAddressesMareCompat = _pi.GetIpcProvider<List<nint>>("MareSynchronos.GetHandledAddresses");
-            _handledGameAddressesMareCompat.RegisterFunc(GetHandledAddresses);
+            _loadFileProviderMcdfCompat = _pi.GetIpcProvider<string, IGameObject, bool>("McdfSynchronos.LoadMcdf");
+            _loadFileProviderMcdfCompat.RegisterFunc(LoadAppearance);
+            _loadFileAsyncProviderMcdfCompat = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfSynchronos.LoadMcdfAsync");
+            _loadFileAsyncProviderMcdfCompat.RegisterFunc(LoadMcdfAsync);
+            _handledGameAddressesMcdfCompat = _pi.GetIpcProvider<List<nint>>("McdfSynchronos.GetHandledAddresses");
+            _handledGameAddressesMcdfCompat.RegisterFunc(GetHandledAddresses);
         });
         return Task.CompletedTask;
     }
@@ -104,23 +104,23 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     }
     public CharacterCustomization GetGlamourerCustomization()
     {
-        return _mareCharaFileManager.GetGlamourerCustomization();
+        return _McdfCharaFileManager.GetGlamourerCustomization();
     }
     public void CreateMCDF(string path)
     {
-        _mareCharaFileManager.SaveMareCharaFile("Quest Reborn MCDF", path);
+        _McdfCharaFileManager.SaveMcdfCharaFile("Quest Reborn MCDF", path);
     }
     public bool IsWorking()
     {
-        return _mareCharaFileManager.CurrentlyWorking;
+        return _McdfCharaFileManager.CurrentlyWorking;
     }
     public void RemoveAllTemporaryCollections()
     {
-        _mareCharaFileManager.RemoveAllTemporaryCollections();
+        _McdfCharaFileManager.RemoveAllTemporaryCollections();
     }
     public void RemoveTemporaryCollection(string name)
     {
-        _mareCharaFileManager.RemoveTemporaryCollection(name);
+        _McdfCharaFileManager.RemoveTemporaryCollection(name);
     }
     private async Task ApplyAppearanceAsync(string path, IGameObject target, int appearanceApplicationType = 0)
     {
@@ -128,18 +128,18 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         {
             if (path.Contains(".mcdf"))
             {
-                var data = _mareCharaFileManager.LoadMareCharaFile(path);
+                var data = _McdfCharaFileManager.LoadMcdfCharaFile(path);
                 if (data != null)
                 {
                     if (target != null)
                     {
-                        await _mareCharaFileManager.ApplyMareCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
+                        await _McdfCharaFileManager.ApplyMcdfCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                _mareCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
+                _McdfCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
             }
         }
         catch (Exception e)

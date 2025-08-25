@@ -1,13 +1,13 @@
 ﻿using Dalamud.Plugin.Services;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.PlayerData.Data;
-using MareSynchronos.PlayerData.Factories;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.PlayerData.Data;
+using McdfLoader.PlayerData.Factories;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.PlayerData.Services;
+namespace McdfLoader.PlayerData.Services;
 
 #pragma warning disable MA0040
 

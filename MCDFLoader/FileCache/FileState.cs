@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.FileCache;
+﻿namespace McdfLoader.FileCache;
 
 public enum FileState
 {

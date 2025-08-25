@@ -1,11 +1,11 @@
-﻿namespace MareSynchronos.PlayerData.Export;
+﻿namespace McdfLoader.PlayerData.Export;
 
-public record MareCharaFileHeader(byte Version, MareCharaFileData CharaFileData)
+public record McdfCharaFileHeader(byte Version, McdfCharaFileData CharaFileData)
 {
     public static readonly byte CurrentVersion = 1;
 
     public byte Version { get; set; } = Version;
-    public MareCharaFileData CharaFileData { get; set; } = CharaFileData;
+    public McdfCharaFileData CharaFileData { get; set; } = CharaFileData;
     public string FilePath { get; private set; } = string.Empty;
 
     public void WriteToStream(BinaryWriter writer)
@@ -20,19 +20,19 @@ public record MareCharaFileHeader(byte Version, MareCharaFileData CharaFileData)
         writer.Write(charaFileDataArray);
     }
 
-    public static MareCharaFileHeader? FromBinaryReader(string path, BinaryReader reader)
+    public static McdfCharaFileHeader? FromBinaryReader(string path, BinaryReader reader)
     {
         var chars = new string(reader.ReadChars(4));
-        if (!string.Equals(chars, "MCDF", StringComparison.Ordinal)) throw new InvalidDataException("Not a Mare Chara File");
+        if (!string.Equals(chars, "MCDF", StringComparison.Ordinal)) throw new InvalidDataException("Not a Mcdf Chara File");
 
-        MareCharaFileHeader? decoded = null;
+        McdfCharaFileHeader? decoded = null;
 
         var version = reader.ReadByte();
         if (version == 1)
         {
             var dataLength = reader.ReadInt32();
 
-            decoded = new(version, MareCharaFileData.FromByteArray(reader.ReadBytes(dataLength)))
+            decoded = new(version, McdfCharaFileData.FromByteArray(reader.ReadBytes(dataLength)))
             {
                 FilePath = path,
             };

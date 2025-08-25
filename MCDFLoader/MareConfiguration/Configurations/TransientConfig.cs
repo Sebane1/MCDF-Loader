@@ -1,6 +1,6 @@
-﻿namespace MareSynchronos.MareConfiguration.Configurations;
+﻿namespace McdfLoader.McdfConfiguration.Configurations;
 
-public class TransientConfig : IMareConfiguration
+public class TransientConfig : IMcdfConfiguration
 {
     public Dictionary<string, TransientPlayerConfig> TransientConfigs { get; set; } = [];
     public int Version { get; set; } = 0;

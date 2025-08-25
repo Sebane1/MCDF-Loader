@@ -1,9 +1,9 @@
 ﻿using Dalamud.Plugin.Services;
 using LZ4;
-using MareSynchronos.Interop.Ipc;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.Interop.Ipc;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using McdfDataImporter;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -11,15 +11,15 @@ using System.Collections.Concurrent;
 using System.Globalization;
 using System.Text;
 
-namespace MareSynchronos.FileCache;
+namespace McdfLoader.FileCache;
 
 public sealed class FileCacheManager : IHostedService
 {
     public const string CachePrefix = "{cache}";
     public const string CsvSplit = "|";
     public const string PenumbraPrefix = "{penumbra}";
-    private readonly MareConfigService _configService;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfConfigService _configService;
+    private readonly McdfMediator _McdfMediator;
     private readonly string _csvPath;
     private readonly ConcurrentDictionary<string, List<FileCacheEntity>> _fileCaches = new(StringComparer.Ordinal);
     private readonly SemaphoreSlim _getCachesByPathsSemaphore = new(1, 1);
@@ -27,12 +27,12 @@ public sealed class FileCacheManager : IHostedService
     private readonly IpcManager _ipcManager;
     private readonly IPluginLog _Logger;
 
-    public FileCacheManager(IpcManager ipcManager, MareConfigService configService, McdfMediator mareMediator)
+    public FileCacheManager(IpcManager ipcManager, McdfConfigService configService, McdfMediator McdfMediator)
     {
         _Logger = EntryPoint.PluginLog;
         _ipcManager = ipcManager;
         _configService = configService;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
     }
 
     private string CsvBakPath => CsvPath + ".bak";
@@ -84,7 +84,7 @@ public sealed class FileCacheManager : IHostedService
 
     //public Task<List<FileCacheEntity>> ValidateLocalIntegrity(IProgress<(int, int, FileCacheEntity)> progress, CancellationToken cancellationToken)
     //{
-    //    _mareMediator.Publish(new HaltScanMessage(nameof(ValidateLocalIntegrity)));
+    //    _McdfMediator.Publish(new HaltScanMessage(nameof(ValidateLocalIntegrity)));
     //    _Logger.Information("Validating local storage");
     //    var cacheEntries = _fileCaches.SelectMany(v => v.Value).Where(v => v.IsCacheEntry).ToList();
     //    List<FileCacheEntity> brokenEntities = [];
@@ -133,7 +133,7 @@ public sealed class FileCacheManager : IHostedService
     //        }
     //    }
 
-    //    _mareMediator.Publish(new ResumeScanMessage(nameof(ValidateLocalIntegrity)));
+    //    _McdfMediator.Publish(new ResumeScanMessage(nameof(ValidateLocalIntegrity)));
     //    return Task.FromResult(brokenEntities);
     //}
 
@@ -430,9 +430,9 @@ public sealed class FileCacheManager : IHostedService
         {
             if (!_ipcManager.Penumbra.APIAvailable || string.IsNullOrEmpty(_ipcManager.Penumbra.ModDirectory))
             {
-                _mareMediator.Publish(new NotificationMessage("Penumbra not connected",
-                    "Could not load local file cache data. Penumbra is not connected or not properly set up. Please enable and/or configure Penumbra properly to use Mare. After, reload Mare in the Plugin installer.",
-                    MareConfiguration.Models.NotificationType.Error));
+                _McdfMediator.Publish(new NotificationMessage("Penumbra not connected",
+                    "Could not load local file cache data. Penumbra is not connected or not properly set up. Please enable and/or configure Penumbra properly to use Mcdf. After, reload Mcdf in the Plugin installer.",
+                    McdfConfiguration.Models.NotificationType.Error));
             }
 
             _Logger.Information("{csvPath} found, parsing", CsvPath);

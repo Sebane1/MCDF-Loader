@@ -1,4 +1,4 @@
-﻿namespace MareSynchronos.Services.Events;
+﻿namespace McdfLoader.Services.Events;
 
 public enum EventSeverity
 {

@@ -2,28 +2,28 @@
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using LZ4;
-using MareSynchronos.API.Data.Enum;
-using MareSynchronos.FileCache;
-using MareSynchronos.Interop.Ipc;
-using MareSynchronos.MareConfiguration;
-using MareSynchronos.PlayerData.Factories;
-using MareSynchronos.PlayerData.Handlers;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
-using MareSynchronos.Utils;
+using McdfLoader.API.Data.Enum;
+using McdfLoader.FileCache;
+using McdfLoader.Interop.Ipc;
+using McdfLoader.McdfConfiguration;
+using McdfLoader.PlayerData.Factories;
+using McdfLoader.PlayerData.Handlers;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
+using McdfLoader.Utils;
 using McdfDataImporter;
 using Microsoft.Extensions.Logging;
 using RoleplayingVoiceDalamud.Glamourer;
 using System.Text;
-using CharacterData = MareSynchronos.API.Data.CharacterData;
+using CharacterData = McdfLoader.API.Data.CharacterData;
 
-namespace MareSynchronos.PlayerData.Export;
+namespace McdfLoader.PlayerData.Export;
 
-public class MareCharaFileManager : DisposableMediatorSubscriberBase
+public class McdfCharaFileManager : DisposableMediatorSubscriberBase
 {
-    private readonly MareConfigService _configService;
+    private readonly McdfConfigService _configService;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly MareCharaFileDataFactory _factory;
+    private readonly McdfCharaFileDataFactory _factory;
     private readonly GameObjectHandlerFactory _gameObjectHandlerFactory;
     private readonly IpcManager _ipcManager;
     private readonly IPluginLog _Logger;
@@ -31,16 +31,16 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
     private int _globalFileCounter = 0;
     private bool _isInGpose = true;
     private CharacterData _characterData;
-    public event EventHandler<Tuple<IGameObject, long, MareCharaFileHeader>> OnMcdfFailed;
+    public event EventHandler<Tuple<IGameObject, long, McdfCharaFileHeader>> OnMcdfFailed;
     Dictionary<string, EventHandler> pastCollections = new Dictionary<string, EventHandler>();
     Dictionary<string, string> pastAppearanceType = new Dictionary<string, string>();
     private bool _resettingOldAppearance;
     private string originalPlayerAppearanceString;
-    private MareCharaFileData playerCharaFileData;
+    private McdfCharaFileData playerCharaFileData;
     private CharacterCustomization playerCustomization;
 
-    public MareCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
-        FileCacheManager manager, IpcManager ipcManager, MareConfigService configService, DalamudUtilService dalamudUtil,
+    public McdfCharaFileManager(GameObjectHandlerFactory gameObjectHandlerFactory,
+        FileCacheManager manager, IpcManager ipcManager, McdfConfigService configService, DalamudUtilService dalamudUtil,
         McdfMediator mediator) : base(mediator)
     {
         _factory = new(manager);
@@ -144,8 +144,6 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 }
 
                 await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, glamourerData, applicationId, disposeCts.Token, applicationType == AppearanceSwapType.PreserveAllPhysicalTraits, true).ConfigureAwait(false);
-                //await _ipcManager.Penumbra.RedrawAsync(tempHandler, applicationId, disposeCts.Token).ConfigureAwait(false);
-                //_dalamudUtil.WaitWhileGposeCharacterIsDrawing(charaTarget.Address, 30000);
             }
 
             Guid? id = Guid.NewGuid();
@@ -154,11 +152,18 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         {
             if (glamourerCanBeApplied)
             {
-                await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
-                await Task.Delay(1000);
-                if (charaTarget.ObjectIndex == 0)
+                try
                 {
-                    await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
+                    await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
+                    await Task.Delay(1000);
+                    if (charaTarget.ObjectIndex == 0)
+                    {
+                        await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _Logger.Warning(ex, "Failure to read glamourer string");
                 }
             }
             _resettingOldAppearance = false;
@@ -175,7 +180,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         CurrentlyWorking = false;
     }
-    public async Task ApplyMareCharaFile(IGameObject? charaTarget, long expectedLength, MareCharaFileHeader loadedCharaFile, int mcdfApplicationType)
+    public async Task ApplyMcdfCharaFile(IGameObject? charaTarget, long expectedLength, McdfCharaFileHeader loadedCharaFile, int mcdfApplicationType)
     {
         if (charaTarget.ObjectIndex == 0)
         {
@@ -209,7 +214,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
                 CancellationTokenSource disposeCts = new();
                 using var lz4Stream = new LZ4Stream(unwrapped, LZ4StreamMode.Decompress, LZ4StreamFlags.HighCompression);
                 using var reader = new BinaryReader(lz4Stream);
-                MareCharaFileHeader.AdvanceReaderToData(reader);
+                McdfCharaFileHeader.AdvanceReaderToData(reader);
                 _Logger.Debug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
                 extractedFiles = ExtractFilesFromCharaFile(charaTarget.Name.TextValue, loadedCharaFile, reader, expectedLength);
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
@@ -307,7 +312,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         catch (Exception ex)
         {
             _Logger.Warning(ex, "Failure to read MCDF");
-            OnMcdfFailed?.Invoke(this, new Tuple<IGameObject, long, MareCharaFileHeader>(charaTarget, expectedLength, loadedCharaFile));
+            OnMcdfFailed?.Invoke(this, new Tuple<IGameObject, long, McdfCharaFileHeader>(charaTarget, expectedLength, loadedCharaFile));
         }
         finally
         {
@@ -338,7 +343,7 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             }
         });
     }
-    public Tuple<long, MareCharaFileHeader> LoadMareCharaFile(string filePath)
+    public Tuple<long, McdfCharaFileHeader> LoadMcdfCharaFile(string filePath)
     {
         CurrentlyWorking = true;
         try
@@ -346,9 +351,9 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
             using var unwrapped = File.OpenRead(filePath);
             using var lz4Stream = new LZ4Stream(unwrapped, LZ4StreamMode.Decompress, LZ4StreamFlags.HighCompression);
             using var reader = new BinaryReader(lz4Stream);
-            var loadedCharaFile = MareCharaFileHeader.FromBinaryReader(filePath, reader);
+            var loadedCharaFile = McdfCharaFileHeader.FromBinaryReader(filePath, reader);
 
-            _Logger.Information("Read Mare Chara File");
+            _Logger.Information("Read Mcdf Chara File");
             _Logger.Information("Version: {ver}", (loadedCharaFile?.Version ?? -1));
             long expectedLength = 0;
             if (loadedCharaFile != null)
@@ -375,12 +380,12 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
 
                 _Logger.Information("Expected length: {expected}", expectedLength.ToByteString());
             }
-            return new Tuple<long, MareCharaFileHeader>(expectedLength, loadedCharaFile);
+            return new Tuple<long, McdfCharaFileHeader>(expectedLength, loadedCharaFile);
         }
         finally { CurrentlyWorking = false; }
     }
 
-    public void SaveMareCharaFile(string description, string filePath)
+    public void SaveMcdfCharaFile(string description, string filePath)
     {
         CurrentlyWorking = true;
         var tempFilePath = filePath + ".tmp";
@@ -389,8 +394,8 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         {
             if (_characterData == null) return;
 
-            var mareCharaFileData = _factory.Create(description, _characterData);
-            MareCharaFileHeader output = new(MareCharaFileHeader.CurrentVersion, mareCharaFileData);
+            var McdfCharaFileData = _factory.Create(description, _characterData);
+            McdfCharaFileHeader output = new(McdfCharaFileHeader.CurrentVersion, McdfCharaFileData);
 
             using var fs = new FileStream(tempFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
             using var lz4 = new LZ4Stream(fs, LZ4StreamMode.Compress, LZ4StreamFlags.HighCompression);
@@ -420,13 +425,13 @@ public class MareCharaFileManager : DisposableMediatorSubscriberBase
         }
         catch (Exception ex)
         {
-            _Logger.Error(ex, "Failure Saving Mare Chara File, deleting output");
+            _Logger.Error(ex, "Failure Saving Mcdf Chara File, deleting output");
             File.Delete(tempFilePath);
         }
         finally { CurrentlyWorking = false; }
     }
 
-    private Dictionary<string, string> ExtractFilesFromCharaFile(string fileId, MareCharaFileHeader charaFileHeader, BinaryReader reader, long expectedLength)
+    private Dictionary<string, string> ExtractFilesFromCharaFile(string fileId, McdfCharaFileHeader charaFileHeader, BinaryReader reader, long expectedLength)
     {
         long totalRead = 0;
         Dictionary<string, string> gamePathToFilePath = new(StringComparer.Ordinal);

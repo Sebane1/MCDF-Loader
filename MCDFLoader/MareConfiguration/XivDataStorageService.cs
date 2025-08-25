@@ -1,6 +1,6 @@
-﻿using MareSynchronos.MareConfiguration.Configurations;
+﻿using McdfLoader.McdfConfiguration.Configurations;
 
-namespace MareSynchronos.MareConfiguration;
+namespace McdfLoader.McdfConfiguration;
 
 public class XivDataStorageService : ConfigurationServiceBase<XivDataStorageConfig>
 {

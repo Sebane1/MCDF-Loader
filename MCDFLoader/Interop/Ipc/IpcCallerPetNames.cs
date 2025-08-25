@@ -2,17 +2,17 @@
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
-using MareSynchronos.Services;
-using MareSynchronos.Services.Mediator;
+using McdfLoader.Services;
+using McdfLoader.Services.Mediator;
 using Microsoft.Extensions.Logging;
 
-namespace MareSynchronos.Interop.Ipc;
+namespace McdfLoader.Interop.Ipc;
 
 public sealed class IpcCallerPetNames : IIpcCaller
 {
     private readonly IPluginLog _Logger;
     private readonly DalamudUtilService _dalamudUtil;
-    private readonly McdfMediator _mareMediator;
+    private readonly McdfMediator _McdfMediator;
 
     private readonly ICallGateSubscriber<object> _petnamesReady;
     private readonly ICallGateSubscriber<object> _petnamesDisposing;
@@ -25,11 +25,11 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private readonly ICallGateSubscriber<ushort, object> _clearPlayerData;
 
     public IpcCallerPetNames( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator)
+        McdfMediator McdfMediator)
     {
         _Logger = EntryPoint.PluginLog;
         _dalamudUtil = dalamudUtil;
-        _mareMediator = mareMediator;
+        _McdfMediator = McdfMediator;
 
         _petnamesReady = pi.GetIpcSubscriber<object>("PetRenamer.Ready");
         _petnamesDisposing = pi.GetIpcSubscriber<object>("PetRenamer.Disposing");
@@ -69,12 +69,12 @@ public sealed class IpcCallerPetNames : IIpcCaller
     private void OnPetNicknamesReady()
     {
         CheckAPI();
-        _mareMediator.Publish(new PetNamesReadyMessage());
+        _McdfMediator.Publish(new PetNamesReadyMessage());
     }
 
     private void OnPetNicknamesDispose()
     {
-        _mareMediator.Publish(new PetNamesMessage(string.Empty));
+        _McdfMediator.Publish(new PetNamesMessage(string.Empty));
     }
 
     public string GetLocalNames()
@@ -147,7 +147,7 @@ public sealed class IpcCallerPetNames : IIpcCaller
 
     private void OnLocalPetNicknamesDataChange(string data)
     {
-        _mareMediator.Publish(new PetNamesMessage(data));
+        _McdfMediator.Publish(new PetNamesMessage(data));
     }
 
     public void Dispose()
