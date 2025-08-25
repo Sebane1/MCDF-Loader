@@ -54,8 +54,8 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
     private readonly ResolvePlayerPathsAsync _penumbraResolvePaths;
     private readonly GetGameObjectResourcePaths _penumbraResourcePaths;
 
-    public IpcCallerPenumbra( IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
-        McdfMediator mareMediator, RedrawManager redrawManager) : base( mareMediator)
+    public IpcCallerPenumbra(IDalamudPluginInterface pi, DalamudUtilService dalamudUtil,
+        McdfMediator mareMediator, RedrawManager redrawManager) : base(mareMediator)
     {
         _pi = pi;
         _dalamudUtil = dalamudUtil;
@@ -158,7 +158,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         _penumbraObjectIsRedrawn.Dispose();
     }
 
-    public async Task AssignTemporaryCollectionAsync( Guid collName, int idx)
+    public async Task AssignTemporaryCollectionAsync(Guid collName, int idx)
     {
         if (!APIAvailable) return;
 
@@ -170,7 +170,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         }).ConfigureAwait(false);
     }
 
-    public async Task ConvertTextureFiles( Dictionary<string, string[]> textures, IProgress<(string, int)> progress, CancellationToken token)
+    public async Task ConvertTextureFiles(Dictionary<string, string[]> textures, IProgress<(string, int)> progress, CancellationToken token)
     {
         if (!APIAvailable) return;
 
@@ -210,21 +210,22 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         }).ConfigureAwait(false);
     }
 
-    public async Task<Guid> CreateTemporaryCollectionAsync( string uid)
+    public async Task<Guid> CreateTemporaryCollectionAsync(string uid)
     {
         if (!APIAvailable) return Guid.Empty;
 
         return await _dalamudUtil.RunOnFrameworkThread(() =>
         {
-            var collName = "Mare_" + uid;
-            var collId = _penumbraCreateNamedTemporaryCollection.Invoke(collName);
-            Logger.Debug("Creating Temp Collection {collName}, GUID: {collId}", collName, collId);
-            return collId;
+            var collName = "25fd2a79-7c6f-4319-8b22-5f662c53093_" + uid;
+            Guid collection = Guid.Empty;
+            var collId = _penumbraCreateNamedTemporaryCollection.Invoke("25fd2a79-7c6f-4319-8b22-5f662c53093", collName, out collection);
+            Logger.Debug("Creating Temp Collection {collName}, GUID: {collId}", collName, collection);
+            return collection;
 
         }).ConfigureAwait(false);
     }
 
-    public async Task<Dictionary<string, HashSet<string>>?> GetCharacterData( GameObjectHandler handler)
+    public async Task<Dictionary<string, HashSet<string>>?> GetCharacterData(GameObjectHandler handler)
     {
         if (!APIAvailable) return null;
 
@@ -243,7 +244,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         return _penumbraGetMetaManipulations.Invoke();
     }
 
-    public async Task RedrawAsync( GameObjectHandler handler, Guid applicationId, CancellationToken token)
+    public async Task RedrawAsync(GameObjectHandler handler, Guid applicationId, CancellationToken token)
     {
         if (!APIAvailable || _dalamudUtil.IsZoning) return;
         try
@@ -262,7 +263,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         }
     }
 
-    public async Task RemoveTemporaryCollectionAsync( Guid applicationId, Guid collId)
+    public async Task RemoveTemporaryCollectionAsync(Guid applicationId, Guid collId)
     {
         if (!APIAvailable) return;
         await _dalamudUtil.RunOnFrameworkThread(() =>
@@ -285,7 +286,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         return await _penumbraResolvePaths.Invoke(forward, reverse).ConfigureAwait(false);
     }
 
-    public async Task SetManipulationDataAsync( Guid applicationId, Guid collId, string manipulationData)
+    public async Task SetManipulationDataAsync(Guid applicationId, Guid collId, string manipulationData)
     {
         if (!APIAvailable) return;
 
@@ -297,7 +298,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
         }).ConfigureAwait(false);
     }
 
-    public async Task SetTemporaryModsAsync( Guid applicationId, Guid collId, Dictionary<string, string> modPaths)
+    public async Task SetTemporaryModsAsync(Guid applicationId, Guid collId, Dictionary<string, string> modPaths)
     {
         if (!APIAvailable) return;
 
