@@ -17,7 +17,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 {
     private readonly IPluginLog _Logger;
     private readonly IDalamudPluginInterface _pi;
-    private readonly McdfCharaFileManager _McdfCharaFileManager;
+    private readonly McdfCharaFileManager _mcdfCharaFileManager;
     private readonly DalamudUtilService _dalamudUtil;
     private ICallGateProvider<string, IGameObject, int, bool>? _loadFileProvider;
     private ICallGateProvider<string, IGameObject, Task<bool>>? _loadFileAsyncProvider;
@@ -34,7 +34,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         McdfMediator McdfMediator)
     {
         _pi = pi;
-        _McdfCharaFileManager = McdfCharaFileManager;
+        _mcdfCharaFileManager = McdfCharaFileManager;
         _dalamudUtil = dalamudUtil;
         Mediator = McdfMediator;
 
@@ -104,23 +104,23 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     }
     public CharacterCustomization GetGlamourerCustomization()
     {
-        return _McdfCharaFileManager.GetGlamourerCustomization();
+        return _mcdfCharaFileManager.GetGlamourerCustomization();
     }
     public void CreateMCDF(string path)
     {
-        _McdfCharaFileManager.SaveMcdfCharaFile("Quest Reborn MCDF", path);
+        _mcdfCharaFileManager.SaveMcdfCharaFile("Quest Reborn MCDF", path);
     }
     public bool IsWorking()
     {
-        return _McdfCharaFileManager.CurrentlyWorking;
+        return _mcdfCharaFileManager.CurrentlyWorking;
     }
     public void RemoveAllTemporaryCollections()
     {
-        _McdfCharaFileManager.RemoveAllTemporaryCollections();
+        _mcdfCharaFileManager.RemoveAllTemporaryCollections();
     }
     public void RemoveTemporaryCollection(string name)
     {
-        _McdfCharaFileManager.RemoveTemporaryCollection(name);
+        _mcdfCharaFileManager.RemoveTemporaryCollection(name);
     }
     private async Task ApplyAppearanceAsync(string path, IGameObject target, int appearanceApplicationType = 0)
     {
@@ -128,18 +128,18 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         {
             if (path.Contains(".mcdf"))
             {
-                var data = _McdfCharaFileManager.LoadMcdfCharaFile(path);
+                var data = _mcdfCharaFileManager.LoadMcdfCharaFile(path);
                 if (data != null)
                 {
                     if (target != null)
                     {
-                        await _McdfCharaFileManager.ApplyMcdfCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
+                        await _mcdfCharaFileManager.ApplyMcdfCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                _McdfCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
+                _mcdfCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
             }
         }
         catch (Exception e)
