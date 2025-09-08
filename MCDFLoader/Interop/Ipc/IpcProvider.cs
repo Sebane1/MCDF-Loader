@@ -66,13 +66,6 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
             _loadFileAsyncProvider.RegisterFunc(LoadMcdfAsync);
             _handledGameAddresses = _pi.GetIpcProvider<List<nint>>("McdfStandalone.GetHandledAddresses");
             _handledGameAddresses.RegisterFunc(GetHandledAddresses);
-
-            _loadFileProviderMcdfCompat = _pi.GetIpcProvider<string, IGameObject, bool>("McdfSynchronos.LoadMcdf");
-            _loadFileProviderMcdfCompat.RegisterFunc(LoadAppearance);
-            _loadFileAsyncProviderMcdfCompat = _pi.GetIpcProvider<string, IGameObject, Task<bool>>("McdfSynchronos.LoadMcdfAsync");
-            _loadFileAsyncProviderMcdfCompat.RegisterFunc(LoadMcdfAsync);
-            _handledGameAddressesMcdfCompat = _pi.GetIpcProvider<List<nint>>("McdfSynchronos.GetHandledAddresses");
-            _handledGameAddressesMcdfCompat.RegisterFunc(GetHandledAddresses);
         });
         return Task.CompletedTask;
     }
