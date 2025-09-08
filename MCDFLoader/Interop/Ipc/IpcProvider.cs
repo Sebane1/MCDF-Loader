@@ -126,7 +126,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         try
         {
-            if (path.Contains(".mcdf"))
+            if (path.Contains(".mcdf") || path.Contains(".bin"))
             {
                 var data = _mcdfCharaFileManager.LoadMcdfCharaFile(path);
                 if (data != null)
