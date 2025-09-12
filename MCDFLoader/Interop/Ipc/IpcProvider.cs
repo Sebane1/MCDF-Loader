@@ -101,7 +101,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     }
     public void CreateMCDF(string path)
     {
-        _mcdfCharaFileManager.SaveMcdfCharaFile("Quest Reborn MCDF", path);
+        _mcdfCharaFileManager.SaveMcdfCharaFile("MCDF", path);
     }
     public bool IsWorking()
     {
