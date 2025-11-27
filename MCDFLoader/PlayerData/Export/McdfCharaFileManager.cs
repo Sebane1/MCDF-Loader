@@ -2,6 +2,7 @@
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using LZ4;
+using McdfDataImporter;
 using McdfLoader.API.Data.Enum;
 using McdfLoader.FileCache;
 using McdfLoader.Interop.Ipc;
@@ -11,9 +12,9 @@ using McdfLoader.PlayerData.Handlers;
 using McdfLoader.Services;
 using McdfLoader.Services.Mediator;
 using McdfLoader.Utils;
-using McdfDataImporter;
 using Microsoft.Extensions.Logging;
 using RoleplayingVoiceDalamud.Glamourer;
+using System.Security.Cryptography;
 using System.Text;
 using CharacterData = McdfLoader.API.Data.CharacterData;
 
@@ -431,18 +432,34 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
         finally { CurrentlyWorking = false; }
     }
 
+    static string ComputeMD5Hash(string input)
+    {
+        using (MD5 md5 = MD5.Create())
+        {
+            byte[] inputBytes = Encoding.UTF8.GetBytes(input);
+            byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < hashBytes.Length; i++)
+            {
+                sb.Append(hashBytes[i].ToString("x2"));
+            }
+            return sb.ToString();
+        }
+    }
+
     private Dictionary<string, string> ExtractFilesFromCharaFile(string fileId, McdfCharaFileHeader charaFileHeader, BinaryReader reader, long expectedLength)
     {
         long totalRead = 0;
         Dictionary<string, string> gamePathToFilePath = new(StringComparer.Ordinal);
         foreach (var fileData in charaFileHeader.CharaFileData.Files)
         {
-            var fileName = Path.Combine(AppearanceAccessUtils.CacheLocation, fileId + "_mcdf_" + _globalFileCounter++ + ".tmp");
+            var fileName = Path.Combine(AppearanceAccessUtils.CacheLocation, fileData.Hash + ".tmp");
             var length = fileData.Length;
-            if (!File.Exists(fileName))
+            try
             {
-                try
-                {
+                //if (!File.Exists(fileName))
+                //{
                     var bufferSize = length;
                     using var fs = File.OpenWrite(fileName);
                     using var wr = new BinaryWriter(fs);
@@ -452,16 +469,20 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
                     wr.Flush();
                     wr.Close();
                     if (buffer.Length == 0) throw new EndOfStreamException("Unexpected EOF");
-                    foreach (var path in fileData.GamePaths)
-                    {
-                        gamePathToFilePath[path] = fileName;
-                        _Logger.Debug("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
-                    }
-                }
-                catch
+                //}
+                //else
+                //{
+                //    reader.BaseStream.Position += length;
+                //}
+                foreach (var path in fileData.GamePaths)
                 {
-
+                    gamePathToFilePath[path] = fileName;
+                    _Logger.Debug("{path} => {fileName} [{hash}]", path, fileName, fileData.Hash);
                 }
+            }
+            catch
+            {
+
             }
             totalRead += length;
             _Logger.Debug("Read {read}/{expected} bytes", totalRead.ToByteString(), expectedLength.ToByteString());
