@@ -1,4 +1,4 @@
-﻿using Dalamud.Plugin.Services;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using McdfLoader.Services;
@@ -107,7 +107,7 @@ public sealed class GameObjectHandler : DisposableMediatorSubscriberBase
     public ObjectKind ObjectKind { get; }
     private byte[] CustomizeData { get; set; } = new byte[26];
     private IntPtr DrawObjectAddress { get; set; }
-    private byte[] EquipSlotData { get; set; } = new byte[40];
+    private byte[] EquipSlotData { get; set; } = new byte[80];
     private ushort[] MainHandData { get; set; } = new ushort[3];
     private ushort[] OffHandData { get; set; } = new ushort[3];
 

@@ -11,6 +11,9 @@ namespace RoleplayingVoiceDalamud.Glamourer
     // Root myDeserializedClass = JsonConvert.DeserializeObject<Root>(myJsonResponse);
     public class Body
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -21,24 +24,36 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class BodyType
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class BustSize
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Clan
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Customize
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public Customize()
         {
             Race = new Race();
@@ -119,6 +134,9 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Ears
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -129,6 +147,9 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Equipment
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public Equipment()
         {
             MainHand = new MainHand();
@@ -167,11 +188,17 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class FacialValue
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
     public class Feet
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -182,24 +209,36 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Gender
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class HairColor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Hairstyle
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Hands
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -210,12 +249,18 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Hat
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public bool Show { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Head
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -226,36 +271,54 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Height
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Highlights
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class HighlightsColor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Jaw
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class LegacyTattoo
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Legs
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -266,6 +329,9 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class LFinger
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -276,18 +342,27 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class LipColor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Lipstick
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class MainHand
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public ulong ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -298,18 +373,27 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Mouth
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class MuscleMass
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Neck
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -320,12 +404,18 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Nose
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class OffHand
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -336,12 +426,18 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class Race
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class RFinger
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }
@@ -352,6 +448,9 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class CharacterCustomization
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         private static byte version;
 
         public CharacterCustomization()
@@ -378,48 +477,72 @@ namespace RoleplayingVoiceDalamud.Glamourer
 
     public class SkinColor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class SmallIris
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class TailShape
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class TattooColor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public int Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Visor
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public bool IsToggled { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Weapon
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public bool Show { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Wetness
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public bool Value { get; set; }
         public bool Apply { get { return true; } set { var thing = value; } }
     }
 
     public class Wrists
     {
+        [Newtonsoft.Json.JsonExtensionData]
+        public System.Collections.Generic.IDictionary<string, Newtonsoft.Json.Linq.JToken> AdditionalData;
+
         public long ItemId { get; set; }
         public int Stain { get; set; }
         public bool Crest { get; set; }

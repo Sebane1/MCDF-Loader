@@ -1,4 +1,4 @@
-﻿using Dalamud.Plugin.Services;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using McdfLoader.API.Data.Enum;
 using McdfLoader.FileCache;
@@ -43,7 +43,8 @@ public class PlayerDataFactory
     {
         if (!_ipcManager.Initialized)
         {
-            throw new InvalidOperationException("Penumbra or Glamourer is not connected");
+            _logger.Warning("Penumbra or Glamourer is not connected. Skipping Character Data Cache.");
+            return;
         }
 
         if (playerRelatedObject == null) return;
