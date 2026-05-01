@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Dalamud.NET.SDK/14.0.0">
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Dalamud.NET.SDK/15.0.0">
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
@@ -29,7 +29,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="14.0.1" />
+    <PackageReference Include="DalamudPackager" Version="15.0.0" />
     <PackageReference Include="Downloader" Version="3.3.4" />
     <PackageReference Include="lz4net" Version="1.0.15.93" />
     <PackageReference Include="Meziantou.Analyzer" Version="2.0.189">

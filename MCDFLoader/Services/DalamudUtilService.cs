@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Services;
@@ -96,7 +96,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     {
         EnsureIsOnFramework();
         var objTableObj = _objectTable[index];
-        if (objTableObj!.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player) return null;
+        if (objTableObj!.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc) return null;
         return (Dalamud.Game.ClientState.Objects.Types.ICharacter)objTableObj;
     }
 
@@ -124,7 +124,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public bool GetIsPlayerPresent()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer != null && _clientState.LocalPlayer.IsValid();
+        return _objectTable.LocalPlayer != null && _objectTable.LocalPlayer.IsValid();
     }
 
     public async Task<bool> GetIsPlayerPresentAsync()
@@ -163,7 +163,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public IPlayerCharacter GetPlayerCharacter()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer!;
+        return _objectTable.LocalPlayer!;
     }
 
     public IntPtr GetPlayerCharacterFromCachedTableByIdent(string characterName)
@@ -175,7 +175,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public string GetPlayerName()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer?.Name.ToString() ?? "--";
+        return _objectTable.LocalPlayer?.Name.ToString() ?? "--";
     }
 
     public async Task<string> GetPlayerNameAsync()
@@ -197,7 +197,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public IntPtr GetPlayerPointer()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer?.Address ?? IntPtr.Zero;
+        return _objectTable.LocalPlayer?.Address ?? IntPtr.Zero;
     }
 
     public async Task<IntPtr> GetPlayerPointerAsync()
@@ -208,13 +208,13 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
     public uint GetHomeWorldId()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer!.HomeWorld.RowId;
+        return _objectTable.LocalPlayer!.HomeWorld.RowId;
     }
 
     public uint GetWorldId()
     {
         EnsureIsOnFramework();
-        return _clientState.LocalPlayer!.CurrentWorld.RowId;
+        return _objectTable.LocalPlayer!.CurrentWorld.RowId;
     }
 
     public async Task<uint> GetWorldIdAsync()
@@ -285,7 +285,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
         _framework.Update += FrameworkOnUpdate;
         if (IsLoggedIn)
         {
-            _classJobId = _clientState.LocalPlayer!.ClassJob.RowId;
+            _classJobId = _objectTable.LocalPlayer!.ClassJob.RowId;
         }
 
         _Logger.Information("Started DalamudUtilService");
@@ -429,7 +429,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
 
     private unsafe void FrameworkOnUpdateInternal()
     {
-        if (_clientState.LocalPlayer?.IsDead ?? false)
+        if (_objectTable.LocalPlayer?.IsDead ?? false)
         {
             return;
         }
@@ -444,7 +444,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
             for (int i = 0; i < 200; i += 2)
             {
                 var chara = _objectTable[i];
-                if (chara == null || chara.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Player)
+                if (chara == null || chara.ObjectKind != Dalamud.Game.ClientState.Objects.Enums.ObjectKind.Pc)
                     continue;
 
                 var charaName = ((GameObject*)chara.Address)->NameString;
@@ -508,7 +508,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                 var zone = _clientState.TerritoryType;
                 if (_lastZone != zone)
                 {
-                    _lastZone = zone;
+                    _lastZone = (ushort)zone;
                     if (!_sentBetweenAreas)
                     {
                         _Logger.Debug("Zone switch/Gpose start");
@@ -529,7 +529,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
                 Mediator.Publish(new ResumeScanMessage(nameof(ConditionFlag.BetweenAreas)));
             }
 
-            var localPlayer = _clientState.LocalPlayer;
+            var localPlayer = _objectTable.LocalPlayer;
             if (localPlayer != null)
             {
                 _classJobId = localPlayer.ClassJob.RowId;
@@ -547,7 +547,7 @@ public class DalamudUtilService : IHostedService, IMediatorSubscriber
             {
                 _Logger.Debug("Logged in");
                 IsLoggedIn = true;
-                _lastZone = _clientState.TerritoryType;
+                _lastZone = (ushort)_clientState.TerritoryType;
                 Mediator.Publish(new DalamudLoginMessage());
             }
             else if (localPlayer == null && IsLoggedIn)
