@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin.Services;
 using Lumina.Excel.Sheets;
 using LZ4;
@@ -151,9 +151,9 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
             string name = charaTarget.Name.TextValue;
             pastCollections[charaTarget.Name.TextValue] = async delegate
         {
-            if (glamourerCanBeApplied)
+            try
             {
-                try
+                if (glamourerCanBeApplied)
                 {
                     await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
                     await Task.Delay(1000);
@@ -162,14 +162,17 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
                         await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
                     }
                 }
-                catch (Exception ex)
-                {
-                    _Logger.Warning(ex, "Failure to read glamourer string");
-                }
             }
-            _resettingOldAppearance = false;
-            pastAppearanceType[charaTarget.Name.TextValue] = "";
-            pastCollections.Remove(charaTarget.Name.TextValue);
+            catch (Exception ex)
+            {
+                _Logger.Warning(ex, "Failure to revert glamourer string in pastCollections");
+            }
+            finally
+            {
+                _resettingOldAppearance = false;
+                pastAppearanceType[charaTarget.Name.TextValue] = "";
+                pastCollections.Remove(charaTarget.Name.TextValue);
+            }
         };
         }
         catch (Exception ex)
@@ -183,9 +186,15 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
     }
     public async Task ApplyMcdfCharaFile(IGameObject? charaTarget, long expectedLength, McdfCharaFileHeader loadedCharaFile, int mcdfApplicationType)
     {
-        if (charaTarget.ObjectIndex == 0)
+        if (charaTarget == null) return;
+        // Cache these values NOW while the game object is still alive.
+        // The cleanup delegate runs async and the IGameObject may be freed by then.
+        string charaName = charaTarget.Name.TextValue;
+        ushort charaObjectIndex = charaTarget.ObjectIndex;
+
+        if (charaObjectIndex == 0)
         {
-            if (!pastCollections.ContainsKey(charaTarget.Name.TextValue))
+            if (!pastCollections.ContainsKey(charaName))
             {
                 playerCharaFileData = _factory.Create("description", _characterData);
                 playerCustomization = CharacterCustomization.ReadCustomization(playerCharaFileData.GlamourerData);
@@ -193,7 +202,7 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
             }
         }
 
-        pastAppearanceType[charaTarget.Name.TextValue] = "modded";
+        pastAppearanceType[charaName] = "modded";
         var applicationType = (AppearanceSwapType)mcdfApplicationType;
 
         bool glamourerCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyGlamourerData
@@ -203,7 +212,7 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
         bool penumbraCanBeApplied = applicationType == AppearanceSwapType.EntireAppearance || applicationType == AppearanceSwapType.OnlyModData
                     || (applicationType != AppearanceSwapType.OnlyGlamourerData && applicationType != AppearanceSwapType.OnlyCustomizeData);
 
-        if (charaTarget == null) return;
+        // charaTarget null check already done above
         Dictionary<string, string> extractedFiles = new(StringComparer.Ordinal);
         CurrentlyWorking = true;
         try
@@ -216,8 +225,8 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
                 using var lz4Stream = new LZ4Stream(unwrapped, LZ4StreamMode.Decompress, LZ4StreamFlags.HighCompression);
                 using var reader = new BinaryReader(lz4Stream);
                 McdfCharaFileHeader.AdvanceReaderToData(reader);
-                _Logger.Debug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaTarget.Name.TextValue, expectedLength, reader.BaseStream.Length);
-                extractedFiles = ExtractFilesFromCharaFile(charaTarget.Name.TextValue, loadedCharaFile, reader, expectedLength);
+                _Logger.Debug("Applying to {chara}, expected length of contents: {exp}, stream length: {len}", charaName, expectedLength, reader.BaseStream.Length);
+                extractedFiles = ExtractFilesFromCharaFile(charaName, loadedCharaFile, reader, expectedLength);
                 Dictionary<string, string> fileSwaps = new(StringComparer.Ordinal);
                 var applicationId = Guid.NewGuid();
                 var coll = Guid.NewGuid();
@@ -230,20 +239,20 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
                             fileSwaps.Add(path, fileSwap.FileSwapPath);
                         }
                     }
-                    coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaTarget.Name.TextValue).ConfigureAwait(false);
-                    await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaTarget.ObjectIndex).ConfigureAwait(false);
+                    coll = await _ipcManager.Penumbra.CreateTemporaryCollectionAsync(charaName).ConfigureAwait(false);
+                    await _ipcManager.Penumbra.AssignTemporaryCollectionAsync(coll, charaObjectIndex).ConfigureAwait(false);
                     await _ipcManager.Penumbra.SetTemporaryModsAsync(applicationId, coll, extractedFiles.Union(fileSwaps).ToDictionary(d => d.Key, d => d.Value, StringComparer.Ordinal)).ConfigureAwait(false);
                     await _ipcManager.Penumbra.SetManipulationDataAsync(applicationId, coll, loadedCharaFile.CharaFileData.ManipulationData).ConfigureAwait(false);
                 }
                 GameObjectHandler tempHandler = await _gameObjectHandlerFactory.Create(ObjectKind.Player,
-                    () => _dalamudUtil.GetCharacterFromObjectTableByName(charaTarget.Name.ToString())?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
+                    () => _dalamudUtil.GetCharacterFromObjectTableByName(charaName)?.Address ?? IntPtr.Zero, isWatched: false).ConfigureAwait(false);
 
                 if (glamourerCanBeApplied)
                 {
                     string glamourerData = loadedCharaFile.CharaFileData.GlamourerData;
 
                     if ((applicationType == AppearanceSwapType.PreserveAllPhysicalTraits ||
-                        applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveRace) && charaTarget.ObjectIndex == 0)
+                        applicationType == AppearanceSwapType.PreserveMasculinityAndFemininity || applicationType == AppearanceSwapType.PreserveRace) && charaObjectIndex == 0)
                     {
                         var mcdfCustomization = CharacterCustomization.ReadCustomization(glamourerData);
                         var customizeData = mcdfCustomization.Customize;
@@ -284,29 +293,48 @@ public class McdfCharaFileManager : DisposableMediatorSubscriberBase
                         id = await _ipcManager.CustomizePlus.SetBodyScaleAsync(tempHandler.Address, Convert.ToBase64String(Encoding.UTF8.GetBytes("{}"))).ConfigureAwait(false);
                     }
                 }
-                string name = charaTarget.Name.TextValue;
-                pastCollections[charaTarget.Name.TextValue] = async delegate
+                string name = charaName;
+                pastCollections[charaName] = async delegate
                 {
-                    if (penumbraCanBeApplied)
+                    try
                     {
-                        await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
-                    }
-                    if (glamourerCanBeApplied)
-                    {
-                        await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
-                        await Task.Delay(1000);
-                        if (charaTarget.ObjectIndex == 0)
+                        if (penumbraCanBeApplied)
                         {
-                            await _ipcManager.Glamourer.ApplyAllAsync(charaTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
+                            await _ipcManager.Penumbra.RemoveTemporaryCollectionAsync(applicationId, coll).ConfigureAwait(false);
+                        }
+                        if (glamourerCanBeApplied)
+                        {
+                            await _ipcManager.Glamourer.RevertAsync(name, tempHandler, applicationId, disposeCts.Token);
+                            await Task.Delay(1000);
+                            if (charaObjectIndex == 0)
+                            {
+                                // Only revert glamourer if the target is still alive
+                                try
+                                {
+                                    var liveTarget = _dalamudUtil.GetCharacterFromObjectTableByName(name);
+                                    if (liveTarget != null)
+                                    {
+                                        await _ipcManager.Glamourer.ApplyAllAsync(liveTarget, tempHandler, originalPlayerAppearanceString, applicationId, disposeCts.Token);
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+                        if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
+                        {
+                            await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
                         }
                     }
-                    if (applicationType == AppearanceSwapType.OnlyCustomizeData || applicationType == AppearanceSwapType.EntireAppearance)
+                    catch (Exception ex)
                     {
-                        await _ipcManager.CustomizePlus.RevertByIdAsync(id).ConfigureAwait(false);
+                        _Logger.Warning(ex, "Error while reverting appearance in pastCollections delegate.");
                     }
-                    _resettingOldAppearance = false;
-                    pastAppearanceType[charaTarget.Name.TextValue] = "";
-                    pastCollections.Remove(charaTarget.Name.TextValue);
+                    finally
+                    {
+                        _resettingOldAppearance = false;
+                        pastAppearanceType[charaName] = "";
+                        pastCollections.Remove(charaName);
+                    }
                 };
             }
         }
