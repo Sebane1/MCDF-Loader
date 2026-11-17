@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Services;
@@ -37,6 +37,7 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
         _mcdfCharaFileManager = McdfCharaFileManager;
         _dalamudUtil = dalamudUtil;
         Mediator = McdfMediator;
+        _Logger = EntryPoint.PluginLog;
 
         Mediator.Subscribe<GameObjectHandlerCreatedMessage>(this, (msg) =>
         {
@@ -81,13 +82,87 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
 
     public async Task<bool> LoadMcdfAsync(string path, IGameObject target)
     {
-        await ApplyAppearanceAsync(path, target).ConfigureAwait(false);
+        string capturedName = string.Empty;
+        ushort capturedIndex = 0;
+        nint capturedAddress = nint.Zero;
+
+        if (target != null)
+        {
+            try
+            {
+                if (_dalamudUtil.IsOnFrameworkThread)
+                {
+                    capturedName = target.Name?.TextValue ?? string.Empty;
+                    capturedIndex = target.ObjectIndex;
+                    capturedAddress = target.Address;
+                }
+                else
+                {
+                    (capturedName, capturedIndex, capturedAddress) = await _dalamudUtil.RunOnFrameworkThread(() =>
+                    {
+                        try
+                        {
+                            return (target.Name?.TextValue ?? string.Empty, target.ObjectIndex, target.Address);
+                        }
+                        catch
+                        {
+                            return (string.Empty, (ushort)0, nint.Zero);
+                        }
+                    }).ConfigureAwait(false);
+                }
+            }
+            catch
+            {
+                try { capturedAddress = target.Address; } catch { }
+            }
+        }
+
+        await ApplyAppearanceAsync(path, target, 0, capturedName, capturedIndex, capturedAddress).ConfigureAwait(false);
         return true;
     }
 
     public bool LoadAppearance(string path, IGameObject target, int appearanceSwap)
     {
-        _ = Task.Run(async () => await ApplyAppearanceAsync(path, target, appearanceSwap).ConfigureAwait(false)).ConfigureAwait(false);
+        // Notice: LoadAppearance may be called from a Task.Run (background thread), e.g. from AQuestReborn.
+        // Therefore, accessing target.Name directly can throw "Not on main thread!".
+        // Safely extract name, index, and address via DalamudUtilService / framework thread if needed.
+        string capturedName = string.Empty;
+        ushort capturedIndex = 0;
+        nint capturedAddress = nint.Zero;
+
+        if (target != null)
+        {
+            try
+            {
+                if (_dalamudUtil.IsOnFrameworkThread)
+                {
+                    capturedName = target.Name?.TextValue ?? string.Empty;
+                    capturedIndex = target.ObjectIndex;
+                    capturedAddress = target.Address;
+                }
+                else
+                {
+                    (capturedName, capturedIndex, capturedAddress) = _dalamudUtil.RunOnFrameworkThread(() =>
+                    {
+                        try
+                        {
+                            return (target.Name?.TextValue ?? string.Empty, target.ObjectIndex, target.Address);
+                        }
+                        catch
+                        {
+                            return (string.Empty, (ushort)0, nint.Zero);
+                        }
+                    }).GetAwaiter().GetResult();
+                }
+            }
+            catch
+            {
+                // Fallback in case of framework run failure
+                try { capturedAddress = target.Address; } catch { }
+            }
+        }
+
+        _ = Task.Run(async () => await ApplyAppearanceAsync(path, target, appearanceSwap, capturedName, capturedIndex, capturedAddress).ConfigureAwait(false)).ConfigureAwait(false);
 
         return true;
     }
@@ -115,7 +190,8 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
     {
         _mcdfCharaFileManager.RemoveTemporaryCollection(name);
     }
-    private async Task ApplyAppearanceAsync(string path, IGameObject target, int appearanceApplicationType = 0)
+    private async Task ApplyAppearanceAsync(string path, IGameObject? target, int appearanceApplicationType = 0,
+        string capturedName = "", ushort capturedIndex = 0, nint capturedAddress = 0)
     {
         try
         {
@@ -126,13 +202,13 @@ public class IpcProvider : IHostedService, IMediatorSubscriber
                 {
                     if (target != null)
                     {
-                        await _mcdfCharaFileManager.ApplyMcdfCharaFile(target, data.Item1, data.Item2, appearanceApplicationType).ConfigureAwait(false);
+                        await _mcdfCharaFileManager.ApplyMcdfCharaFile(target, data.Item1, data.Item2, appearanceApplicationType, capturedName, capturedIndex, capturedAddress).ConfigureAwait(false);
                     }
                 }
             }
             else
             {
-                _mcdfCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType);
+                await _mcdfCharaFileManager.ApplyStandaloneGlamourerString(target, path, appearanceApplicationType, capturedName, capturedIndex).ConfigureAwait(false);
             }
         }
         catch (Exception e)

@@ -1,4 +1,4 @@
-﻿using Dalamud.Plugin;
+using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using McdfLoader.McdfConfiguration.Models;
 using McdfLoader.PlayerData.Handlers;
@@ -160,12 +160,16 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
 
     public async Task AssignTemporaryCollectionAsync(Guid collName, int idx)
     {
-        if (!APIAvailable) return;
+        if (!APIAvailable)
+        {
+            Logger.Warning("[Penumbra IPC] API not available, skipping AssignTemporaryCollectionAsync");
+            return;
+        }
 
         await _dalamudUtil.RunOnFrameworkThread(() =>
         {
             var retAssign = _penumbraAssignTemporaryCollection.Invoke(collName, idx, forceAssignment: true);
-            Logger.Debug("Assigning Temp Collection {collName} to index {idx}, Success: {ret}", collName, idx, retAssign);
+            Logger.Information("[Penumbra IPC] Assigning Temp Collection {collName} to index {idx}, Result: {ret}", collName, idx, retAssign);
             return collName;
         }).ConfigureAwait(false);
     }
@@ -212,14 +216,18 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
 
     public async Task<Guid> CreateTemporaryCollectionAsync(string uid)
     {
-        if (!APIAvailable) return Guid.Empty;
+        if (!APIAvailable)
+        {
+            Logger.Warning("[Penumbra IPC] API not available, skipping CreateTemporaryCollectionAsync");
+            return Guid.Empty;
+        }
 
         return await _dalamudUtil.RunOnFrameworkThread(() =>
         {
             var collName = "25fd2a79-7c6f-4319-8b22-5f662c53093_" + uid;
             Guid collection = Guid.Empty;
             var collId = _penumbraCreateNamedTemporaryCollection.Invoke("25fd2a79-7c6f-4319-8b22-5f662c53093", collName, out collection);
-            Logger.Debug("Creating Temp Collection {collName}, GUID: {collId}", collName, collection);
+            Logger.Information("[Penumbra IPC] Creating Temp Collection {collName}, retCollId: {collId}, collection: {collection}", collName, collId, collection);
             return collection;
 
         }).ConfigureAwait(false);
@@ -252,7 +260,7 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
             await _redrawManager.RedrawSemaphore.WaitAsync(token).ConfigureAwait(false);
             await _redrawManager.PenumbraRedrawInternalAsync(handler, applicationId, (chara) =>
             {
-                Logger.Debug("[{appid}] Calling on IPC: PenumbraRedraw", applicationId);
+                Logger.Information("[Penumbra IPC] [{appid}] Calling on IPC: PenumbraRedraw for idx={idx}", applicationId, chara.ObjectIndex);
                 _penumbraRedraw!.Invoke(chara.ObjectIndex, setting: RedrawType.Redraw);
 
             }, token).ConfigureAwait(false);
@@ -304,14 +312,9 @@ public sealed class IpcCallerPenumbra : DisposableMediatorSubscriberBase, IIpcCa
 
         await _dalamudUtil.RunOnFrameworkThread(() =>
         {
-            foreach (var mod in modPaths)
-            {
-                Logger.Debug("[{applicationId}] Change: {from} => {to}", applicationId, mod.Key, mod.Value);
-            }
             var retRemove = _penumbraRemoveTemporaryMod.Invoke("McdfChara_Files", collId, 0);
-            Logger.Debug("[{applicationId}] Removing temp files mod for {collId}, Success: {ret}", applicationId, collId, retRemove);
             var retAdd = _penumbraAddTemporaryMod.Invoke("McdfChara_Files", collId, modPaths, string.Empty, 0);
-            Logger.Debug("[{applicationId}] Setting temp files mod for {collId}, Success: {ret}", applicationId, collId, retAdd);
+            Logger.Information("[Penumbra IPC] [{applicationId}] SetTemporaryMods for {collId}: count={count}, retRemove={retRemove}, retAdd={retAdd}", applicationId, collId, modPaths.Count, retRemove, retAdd);
         }).ConfigureAwait(false);
     }
 

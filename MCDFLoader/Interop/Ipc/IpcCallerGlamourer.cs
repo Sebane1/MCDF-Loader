@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Glamourer.Api.Helpers;
@@ -117,7 +117,7 @@ public sealed class IpcCallerGlamourer : DisposableMediatorSubscriberBase, IIpcC
             {
                 try
                 {
-                    Logger.Debug("[{appid}] Calling on IPC: GlamourerApplyAll", applicationId);
+                    Logger.Information("[Glamourer IPC] [{appid}] Calling on IPC: GlamourerApplyAll on idx={idx}", applicationId, chara.ObjectIndex);
                     _glamourerApplyAll!.Invoke(customization, chara.ObjectIndex, locksCustomization ? LockCode : 0, onlyEquipment ? Glamourer.Api.Enums.ApplyFlag.Equipment : Glamourer.Api.Enums.ApplyFlag.Customization | Glamourer.Api.Enums.ApplyFlag.Equipment);
                 }
                 catch (Exception ex)
